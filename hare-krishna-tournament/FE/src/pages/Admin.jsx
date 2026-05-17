@@ -448,107 +448,124 @@ function KeliKunjSection({ users, keliKunjList, onRefresh }) {
     <div className="admin-section">
       <h2 className="admin-section-title">🏆 KeliKunj — Winners</h2>
 
-      {/* ── Create form ── */}
+      {/* ── Create form (card style) ── */}
       <form onSubmit={handleCreate}>
-        <div className="kk-form">
-          <div className="kk-field">
-            <label className="admin-field-label">Week No. *</label>
-            <input
-              className="admin-input"
-              type="number" min="1"
-              placeholder="e.g. 1"
-              value={form.keliKunjWeek}
-              onChange={e => setForm(p => ({ ...p, keliKunjWeek: e.target.value }))}
-              required
-            />
-          </div>
+        <div className="kk-card kk-card--create">
 
-          <div className="kk-field">
-            <label className="admin-field-label">🥇 1st Place</label>
-            <WinnerSelect value={form.winners._1} onChange={v => setWinner('_1', v)} />
-          </div>
-          <div className="kk-field">
-            <label className="admin-field-label">🥈 2nd Place</label>
-            <WinnerSelect value={form.winners._2} onChange={v => setWinner('_2', v)} />
-          </div>
-          <div className="kk-field">
-            <label className="admin-field-label">🥉 3rd Place</label>
-            <WinnerSelect value={form.winners._3} onChange={v => setWinner('_3', v)} />
-          </div>
-
-          <div className="kk-field">
-            <label className="admin-field-label">Prize 1st (₹)</label>
-            <input className="admin-input" type="number" min="0" placeholder="400"
-              value={form.prizePool._1} onChange={e => setPrize('_1', e.target.value)} />
-          </div>
-          <div className="kk-field">
-            <label className="admin-field-label">Prize 2nd (₹)</label>
-            <input className="admin-input" type="number" min="0" placeholder="100"
-              value={form.prizePool._2} onChange={e => setPrize('_2', e.target.value)} />
-          </div>
-
-          <div className="kk-field kk-field--btn">
-            <label className="admin-field-label">&nbsp;</label>
+          {/* top row: week no */}
+          <div className="kk-card-top">
+            <div className="kk-inline-field">
+              <label className="admin-field-label">Week No. *</label>
+              <input
+                className="admin-input kk-week-input"
+                type="number" min="1" placeholder="e.g. 1"
+                value={form.keliKunjWeek}
+                onChange={e => setForm(p => ({ ...p, keliKunjWeek: e.target.value }))}
+                required
+              />
+            </div>
             <button className="admin-submit kk-create-btn" type="submit" disabled={loading}>
               {loading ? 'Creating…' : '+ Create Week'}
             </button>
           </div>
+
+          {/* place rows */}
+          <div className="kk-place-row">
+            <span className="kk-place-label">🥇 1st Place</span>
+            <WinnerSelect value={form.winners._1} onChange={v => setWinner('_1', v)} />
+            <span className="kk-place-label kk-prize-label">Prize 1st (₹)</span>
+            <input className="admin-input kk-prize-input" type="number" min="0" placeholder="400"
+              value={form.prizePool._1} onChange={e => setPrize('_1', e.target.value)} />
+          </div>
+
+          <div className="kk-place-row">
+            <span className="kk-place-label">🥈 2nd Place</span>
+            <WinnerSelect value={form.winners._2} onChange={v => setWinner('_2', v)} />
+            <span className="kk-place-label kk-prize-label">Prize 2nd (₹)</span>
+            <input className="admin-input kk-prize-input" type="number" min="0" placeholder="100"
+              value={form.prizePool._2} onChange={e => setPrize('_2', e.target.value)} />
+          </div>
+
+          <div className="kk-place-row kk-place-row--no-prize">
+            <span className="kk-place-label">🥉 3rd Place</span>
+            <WinnerSelect value={form.winners._3} onChange={v => setWinner('_3', v)} />
+          </div>
+
         </div>
       </form>
 
-      {/* ── List ── */}
+      {/* ── List (card per week) ── */}
       {keliKunjList.length > 0 && (
-        <div className="kk-list">
-          <div className="kk-list-header">
-            <span>Week</span>
-            <span>🥇 1st</span>
-            <span>🥈 2nd</span>
-            <span>🥉 3rd</span>
-            <span>Prize 1st</span>
-            <span>Prize 2nd</span>
-            <span>Declared</span>
-            <span>Edit</span>
-          </div>
-
+        <div className="kk-cards-list">
           {keliKunjList.map(k => (
-            <div key={k._id} className="kk-list-row">
-              {editId === k._id ? (
-                <>
-                  <span className="kl-name">Week {k.keliKunjWeek}</span>
-                  <WinnerSelect value={editForm.winners._1} onChange={v => setEditWinner('_1', v)} />
-                  <WinnerSelect value={editForm.winners._2} onChange={v => setEditWinner('_2', v)} />
-                  <WinnerSelect value={editForm.winners._3} onChange={v => setEditWinner('_3', v)} />
-                  <input className="admin-input" type="number" min="0"
-                    value={editForm.prizePool._1} onChange={e => setEditPrize('_1', e.target.value)} />
-                  <input className="admin-input" type="number" min="0"
-                    value={editForm.prizePool._2} onChange={e => setEditPrize('_2', e.target.value)} />
-                  {/* resultDeclared toggle */}
-                  <Switch.Root
-                    className={`switch-root ${editForm.resultDeclared ? 'switch-root--on' : 'switch-root--off'}`}
-                    checked={editForm.resultDeclared}
-                    onCheckedChange={v => setEditForm(p => ({ ...p, resultDeclared: v }))}
-                  >
-                    <Switch.Thumb className="switch-thumb" />
-                  </Switch.Root>
-                  <div className="kl-actions">
-                    <button className="kl-btn kl-btn--save"   onClick={saveEdit}><Check size={15}/></button>
-                    <button className="kl-btn kl-btn--cancel" onClick={() => setEditId(null)}><X size={15}/></button>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <span className="kl-name">Week {k.keliKunjWeek}</span>
-                  <span className="kl-meta">{k.winners?._1?.bhaktName || '—'}</span>
-                  <span className="kl-meta">{k.winners?._2?.bhaktName || '—'}</span>
-                  <span className="kl-meta">{k.winners?._3?.bhaktName || '—'}</span>
-                  <span className="kl-meta">₹{k.prizePool?._1 ?? 0}</span>
-                  <span className="kl-meta">₹{k.prizePool?._2 ?? 0}</span>
-                  <span className={`kk-declared-badge ${k.resultDeclared ? 'kk-declared--yes' : 'kk-declared--no'}`}>
-                    {k.resultDeclared ? '✅ Yes' : '⏳ No'}
-                  </span>
-                  <button className="kl-btn kl-btn--edit" onClick={() => startEdit(k)}><Pencil size={15}/></button>
-                </>
-              )}
+            <div key={k._id} className={`kk-card ${editId === k._id ? 'kk-card--editing' : ''}`}>
+
+              {/* card header: week title + declared + actions */}
+              <div className="kk-card-top">
+                <span className="kk-week-title-label">Week {k.keliKunjWeek}</span>
+
+                <div className="kk-card-right">
+                  {editId === k._id ? (
+                    <>
+                      <span className="admin-field-label" style={{ marginRight: '0.4rem' }}>Result Declared</span>
+                      <Switch.Root
+                        className={`switch-root ${editForm.resultDeclared ? 'switch-root--on' : 'switch-root--off'}`}
+                        checked={editForm.resultDeclared}
+                        onCheckedChange={v => setEditForm(p => ({ ...p, resultDeclared: v }))}
+                      >
+                        <Switch.Thumb className="switch-thumb" />
+                      </Switch.Root>
+                      <button className="kl-btn kl-btn--save"   onClick={saveEdit}><Check size={15}/></button>
+                      <button className="kl-btn kl-btn--cancel" onClick={() => setEditId(null)}><X size={15}/></button>
+                    </>
+                  ) : (
+                    <>
+                      <span className={`kk-declared-badge ${k.resultDeclared ? 'kk-declared--yes' : 'kk-declared--no'}`}>
+                        {k.resultDeclared ? '✅ Declared' : '⏳ Pending'}
+                      </span>
+                      <button className="kl-btn kl-btn--edit" onClick={() => startEdit(k)}><Pencil size={15}/></button>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* place rows */}
+              <div className="kk-place-row">
+                <span className="kk-place-label">🥇 1st Place</span>
+                {editId === k._id
+                  ? <WinnerSelect value={editForm.winners._1} onChange={v => setEditWinner('_1', v)} />
+                  : <span className="kl-meta">{k.winners?._1?.bhaktName || '—'}</span>
+                }
+                <span className="kk-place-label kk-prize-label">Prize 1st (₹)</span>
+                {editId === k._id
+                  ? <input className="admin-input kk-prize-input" type="number" min="0"
+                      value={editForm.prizePool._1} onChange={e => setEditPrize('_1', e.target.value)} />
+                  : <span className="kl-meta">₹{k.prizePool?._1 ?? 0}</span>
+                }
+              </div>
+
+              <div className="kk-place-row">
+                <span className="kk-place-label">🥈 2nd Place</span>
+                {editId === k._id
+                  ? <WinnerSelect value={editForm.winners._2} onChange={v => setEditWinner('_2', v)} />
+                  : <span className="kl-meta">{k.winners?._2?.bhaktName || '—'}</span>
+                }
+                <span className="kk-place-label kk-prize-label">Prize 2nd (₹)</span>
+                {editId === k._id
+                  ? <input className="admin-input kk-prize-input" type="number" min="0"
+                      value={editForm.prizePool._2} onChange={e => setEditPrize('_2', e.target.value)} />
+                  : <span className="kl-meta">₹{k.prizePool?._2 ?? 0}</span>
+                }
+              </div>
+
+              <div className="kk-place-row kk-place-row--no-prize">
+                <span className="kk-place-label">🥉 3rd Place</span>
+                {editId === k._id
+                  ? <WinnerSelect value={editForm.winners._3} onChange={v => setEditWinner('_3', v)} />
+                  : <span className="kl-meta">{k.winners?._3?.bhaktName || '—'}</span>
+                }
+              </div>
+
             </div>
           ))}
         </div>

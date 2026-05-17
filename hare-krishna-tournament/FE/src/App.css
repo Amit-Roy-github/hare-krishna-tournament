@@ -866,83 +866,137 @@
 .kl-btn--cancel { background: rgba(255,255,255,0.1); color: #bbb;  }
 
 /* ── KeliKunj Section ───────────────────────── */
-.kk-form {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem 1rem;
-  align-items: flex-end;
-  margin-bottom: 1.5rem;
-}
 
-.kk-field {
+/* shared card shell */
+.kk-card {
+  border: 1px solid rgba(255,152,0,0.25);
+  border-radius: 1rem;
+  padding: 1.1rem 1.25rem;
+  background: rgba(255,255,255,0.03);
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
-  flex: 1 1 130px;
-  min-width: 110px;
+  gap: 0.65rem;
+  transition: border-color 0.2s;
+}
+.kk-card--create {
+  margin-bottom: 1.5rem;
+  border-color: rgba(255,152,0,0.4);
+  background: rgba(255,152,0,0.05);
+}
+.kk-card--editing {
+  border-color: rgba(100,181,246,0.5);
+  background: rgba(100,181,246,0.04);
 }
 
-.kk-field--btn {
-  flex: 0 0 auto;
+/* cards list */
+.kk-cards-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* top row inside a card */
+.kk-card-top {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+.kk-week-title-label {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #FF9800;
+  flex: 1;
+}
+.kk-card-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+/* inline week-no field in create top row */
+.kk-inline-field {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+}
+.kk-week-input {
+  width: 6rem !important;
+}
+
+/* place rows: label | select/value | prize-label | prize-input/value */
+.kk-place-row {
+  display: grid;
+  grid-template-columns: 8rem 1fr 7rem 1fr;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+}
+.kk-place-row--no-prize {
+  grid-template-columns: 8rem 1fr;
+}
+
+.kk-place-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: rgba(255,255,255,0.75);
+  white-space: nowrap;
+}
+.kk-prize-label {
+  color: rgba(255,215,0,0.7);
+  font-size: 0.8rem;
+  text-align: right;
+}
+.kk-prize-input {
+  width: 100% !important;
 }
 
 .kk-create-btn {
-  margin-bottom: 0;
-  padding: 0.55rem 1.25rem;
+  white-space: nowrap;
+  padding: 0.5rem 1.1rem;
   width: auto;
   font-size: 0.9rem;
+  margin: 0;
+  flex-shrink: 0;
 }
 
 .kk-select {
   cursor: pointer;
 }
-
 .kk-select option {
   background: #1a1025;
   color: #fff;
 }
 
-.kk-list {
-  border: 1px solid #FF980033;
-  border-radius: 1rem;
-  overflow: hidden;
-}
-
-.kk-list-header,
-.kk-list-row {
-  display: grid;
-  grid-template-columns: 0.6fr 1fr 1fr 1fr 0.8fr 0.8fr 0.8fr 0.6fr;
-  align-items: center;
-  gap: 0.6rem;
-  padding: 0.65rem 1rem;
-  border-bottom: 1px solid rgba(255,255,255,0.05);
-}
-
+/* declared badge */
 .kk-declared-badge {
   display: inline-block;
   font-size: 0.78rem;
   font-weight: 600;
-  padding: 0.2rem 0.5rem;
+  padding: 0.2rem 0.6rem;
   border-radius: 999px;
+  white-space: nowrap;
 }
 .kk-declared--yes {
   background: rgba(76,175,80,0.2);
   color: #A5D6A7;
+  border: 1px solid rgba(76,175,80,0.3);
 }
 .kk-declared--no {
   background: rgba(255,152,0,0.15);
   color: #FFB74D;
+  border: 1px solid rgba(255,152,0,0.25);
 }
 
-.kk-list-row:last-child { border-bottom: none; }
-
-.kk-list-header {
-  background: rgba(255,152,0,0.12);
-  font-size: 0.78rem;
-  color: #FF9800;
-  font-weight: 700;
-  letter-spacing: 1.2px;
-  text-transform: uppercase;
+@media (max-width: 600px) {
+  .kk-place-row {
+    grid-template-columns: 1fr 1fr;
+  }
+  .kk-place-row--no-prize {
+    grid-template-columns: 1fr 1fr;
+  }
+  .kk-prize-label { text-align: left; }
 }
 
 /* ── Radix Switch ────────────────────────────── */
