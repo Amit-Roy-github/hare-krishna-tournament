@@ -1,4 +1,5 @@
-import KeliKunj from '../DB/models/KeliKunj.js';
+import KeliKunj   from '../DB/models/KeliKunj.js';
+import '../DB/models/KrishnaDas.js'; // ensure KrishnaDas is registered for populate()
 
 // ── Find ────────────────────────────────────────
 
