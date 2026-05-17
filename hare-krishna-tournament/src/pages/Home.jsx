@@ -48,6 +48,10 @@ export default function Home() {
   }, [])
 
   const rankedContestants = [...contestants]
+    .map(c => ({
+      ...c,
+      score: c.score ?? ((c.defaultScore || 0) + Math.floor((c.todayNaam || 0) / 1000) * 10)
+    }))
     .sort((a, b) => b.score - a.score)
     .map((c, i) => ({ ...c, rank: i + 1 }))
 
@@ -101,7 +105,7 @@ export default function Home() {
             <div className="winner-crown">👑</div>
             <h2 className="winner-heading">Winners Declared!</h2>
             <p className="winner-sub">
-              By the grace of Shri Krishna,<br />the champions have emerged.
+              By the grace of Shri Krishna the champions have emerged.
             </p>
             <div className="winner-grid winner-grid--col">
               {winners.map((w, i) => (
@@ -109,44 +113,58 @@ export default function Home() {
               ))}
             </div>
             <p className="winner-blessing">
-              🙏 Radha Krishna blessings be with you 🙏
+              🙏 Hare Krishna blessings be with you 🙏
             </p>
           </div>
 
           {/* RIGHT — Leaderboard */}
           <div className="col-scores">
             <h2 className="scoreboard-title">
-              📊 Leaderboard <span className="live-badge">● LIVE</span>
+              Leaderboard <span className="live-badge">● LIVE</span>
             </h2>
             <table className="scoreboard-table">
               <thead>
                 <tr>
                   <th>Rank</th>
                   <th>Name</th>
-                  <th>Score</th>
+                  <th>Today's Naam</th>
+                  <th>Naam Score</th>
+                  <th>Total Score</th>
                 </tr>
               </thead>
               <tbody>
-                {rankedContestants.map(c => (
-                  <tr
-                    key={c.name}
-                    className={
-                      c.rank === 1 ? 'row-gold'
-                      : c.rank === 2 ? 'row-silver'
-                      : c.rank === 3 ? 'row-bronze'
-                      : c.rank === 4 ? 'row-4'
-                      : 'row-5'
-                    }
-                  >
-                    <td className="rank-cell">
-                      {c.rank === 1 ? '🥇' : c.rank === 2 ? '🥈' : c.rank === 3 ? '🥉' : `#${c.rank}`}
-                    </td>
-                    <td className="name-cell">{c.name}</td>
-                    <td className="score-cell">{c.score}</td>
-                  </tr>
-                ))}
+                {rankedContestants.map(c => {
+                  const naamScore = Math.floor((c.todayNaam || 0) / 1000) * 10
+                  return (
+                    <tr
+                      key={c.name}
+                      className={
+                        c.rank === 1 ? 'row-gold'
+                        : c.rank === 2 ? 'row-silver'
+                        : c.rank === 3 ? 'row-bronze'
+                        : c.rank === 4 ? 'row-4'
+                        : 'row-5'
+                      }
+                    >
+                      <td className="rank-cell">
+                        {c.rank === 1 ? '🥇' : c.rank === 2 ? '🥈' : c.rank === 3 ? '🥉' : `#${c.rank}`}
+                      </td>
+                      <td className="name-cell">{c.name}</td>
+                      <td className="today-naam-cell">
+                        {c.todayNaam > 0 ? c.todayNaam.toLocaleString('en-IN') : '0'}
+                      </td>
+                      <td className="naam-score-cell">
+                        {naamScore > 0 ? `+${naamScore}` : '0'}
+                      </td>
+                      <td className="score-cell">{c.score}</td>
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
+            <div className="scoring-formula">
+              🕉️ Every 1000 Naam → +10 points &nbsp;·&nbsp; 2000 Naam → +20 points
+            </div>
           </div>
 
         </div>
