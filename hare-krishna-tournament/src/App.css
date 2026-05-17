@@ -1,0 +1,366 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+}
+
+/* ── Background ─────────────────────────────── */
+.root {
+  min-height: 100vh;
+  background: radial-gradient(ellipse at top, #1a0a2e 0%, #0d0520 40%, #000000 100%);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── Floating particles ──────────────────────── */
+.particle {
+  position: fixed;
+  top: 110vh;
+  border-radius: 50%;
+  opacity: 0.7;
+  animation: floatUp linear infinite;
+  pointer-events: none;
+}
+
+@keyframes floatUp {
+  0%   { transform: translateY(0) rotate(0deg);   opacity: 0.8; }
+  100% { transform: translateY(-120vh) rotate(360deg); opacity: 0; }
+}
+
+/* ── Main container ──────────────────────────── */
+.container {
+  position: relative;
+  z-index: 1;
+  max-width: 700px;
+  width: 95%;
+  padding: 40px 24px;
+  text-align: center;
+}
+
+/* ── Top banner ──────────────────────────────── */
+.top-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 32px;
+  font-size: 13px;
+  letter-spacing: 2px;
+  color: #FF9800;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+
+.lotus { font-size: 18px; }
+
+/* ── Title ───────────────────────────────────── */
+.tournament-title {
+  font-size: clamp(2.2rem, 7vw, 3.6rem);
+  font-weight: 900;
+  color: #fff;
+  line-height: 1.1;
+  letter-spacing: -1px;
+  text-shadow: 0 0 40px #FF980066;
+  margin-bottom: 20px;
+}
+
+.title-highlight {
+  display: block;
+  background: linear-gradient(90deg, #FF9800, #FFD700, #FF5722, #FF9800);
+  background-size: 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: shimmer 3s linear infinite;
+}
+
+@keyframes shimmer {
+  0%   { background-position: 0% }
+  100% { background-position: 200% }
+}
+
+/* ── Final Day badge ─────────────────────────── */
+.final-day-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: linear-gradient(135deg, #FF5722, #FF9800, #FFD700);
+  color: #000;
+  font-size: clamp(1.3rem, 4vw, 1.8rem);
+  font-weight: 900;
+  letter-spacing: 4px;
+  padding: 10px 32px;
+  border-radius: 50px;
+  margin-bottom: 24px;
+  box-shadow: 0 0 30px #FF980088, 0 0 60px #FF572244;
+  animation: pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 30px #FF980088, 0 0 60px #FF572244; transform: scale(1); }
+  50%       { box-shadow: 0 0 50px #FFD700aa, 0 0 90px #FF9800aa; transform: scale(1.04); }
+}
+
+.fire { font-size: 1.4rem; }
+
+/* ── Subtitle ────────────────────────────────── */
+.subtitle {
+  color: #ddd;
+  font-size: clamp(0.9rem, 2.5vw, 1.05rem);
+  line-height: 1.7;
+  margin-bottom: 40px;
+  opacity: 0.85;
+}
+
+/* ── Prize section ───────────────────────────── */
+.prize-title {
+  font-size: clamp(1.2rem, 4vw, 1.6rem);
+  color: #FFD700;
+  letter-spacing: 2px;
+  margin-bottom: 28px;
+  text-transform: uppercase;
+}
+
+.trophy { font-size: 1.4rem; }
+
+.prize-grid {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 40px;
+}
+
+/* ── Prize card ──────────────────────────────── */
+.prize-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 2px solid var(--border);
+  border-radius: 20px;
+  padding: 28px 20px;
+  width: 160px;
+  opacity: 0;
+  transform: translateY(30px) scale(0.9);
+  transition: opacity 0.5s ease, transform 0.5s ease, box-shadow 0.3s ease;
+  box-shadow: 0 0 20px var(--glow);
+  backdrop-filter: blur(8px);
+  cursor: default;
+}
+
+.prize-card--visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.prize-card:hover {
+  transform: translateY(-8px) scale(1.05);
+  box-shadow: 0 0 50px var(--glow);
+}
+
+.prize-medal {
+  font-size: 3rem;
+  margin-bottom: 8px;
+}
+
+.prize-rank {
+  font-size: 1.4rem;
+  font-weight: 900;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+}
+
+.prize-label {
+  font-size: 0.72rem;
+  color: #aaa;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin-bottom: 16px;
+}
+
+.prize-amount {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 4px;
+}
+
+.rupee {
+  font-size: 1.3rem;
+  color: #FFD700;
+  font-weight: 700;
+}
+
+.amount {
+  font-size: 2.4rem;
+  font-weight: 900;
+  color: #fff;
+  line-height: 1;
+}
+
+/* ── CTA ─────────────────────────────────────── */
+.call-to-action {
+  margin-bottom: 32px;
+}
+
+.cta-text {
+  font-size: clamp(1rem, 3vw, 1.25rem);
+  color: #FFD700;
+  font-weight: 700;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+  animation: glow 2s ease-in-out infinite;
+}
+
+@keyframes glow {
+  0%, 100% { text-shadow: 0 0 10px #FFD70066; }
+  50%       { text-shadow: 0 0 25px #FFD700cc, 0 0 50px #FF980066; }
+}
+
+.cta-sub {
+  color: #FF9800;
+  font-size: 1.1rem;
+  opacity: 0.9;
+}
+
+/* ── Section divider ─────────────────────────── */
+.section-divider {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 40px 0;
+}
+
+.divider-line {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #FF980066, transparent);
+}
+
+.divider-lotus { font-size: 1.4rem; }
+
+/* ── Winner section ──────────────────────────── */
+.winner-section {
+  margin-bottom: 48px;
+}
+
+.winner-crown {
+  font-size: 3.5rem;
+  animation: bounce 1.5s ease-in-out infinite;
+  margin-bottom: 8px;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-10px); }
+}
+
+.winner-heading {
+  font-size: clamp(2rem, 6vw, 3rem);
+  font-weight: 900;
+  background: linear-gradient(90deg, #FFD700, #FF9800, #FFD700);
+  background-size: 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: shimmer 3s linear infinite;
+  margin-bottom: 12px;
+}
+
+.winner-sub {
+  color: #ccc;
+  font-size: clamp(0.85rem, 2.5vw, 1rem);
+  line-height: 1.7;
+  margin-bottom: 32px;
+  opacity: 0.85;
+}
+
+.winner-grid {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 32px;
+}
+
+/* ── Winner card ─────────────────────────────── */
+.winner-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid var(--border);
+  border-radius: 20px;
+  padding: 28px 20px;
+  width: 160px;
+  opacity: 0;
+  transform: translateY(40px) scale(0.88);
+  transition: opacity 0.55s ease, transform 0.55s ease, box-shadow 0.3s ease;
+  box-shadow: 0 0 24px var(--glow);
+  backdrop-filter: blur(8px);
+  cursor: default;
+}
+
+.winner-card--visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.winner-card:hover {
+  transform: translateY(-8px) scale(1.05);
+  box-shadow: 0 0 50px var(--glow);
+}
+
+.winner-medal {
+  font-size: 2.8rem;
+  margin-bottom: 8px;
+}
+
+.winner-rank {
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+}
+
+.winner-name {
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: #fff;
+  margin-bottom: 4px;
+  letter-spacing: 0.5px;
+}
+
+.winner-label {
+  font-size: 0.68rem;
+  color: #aaa;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin-bottom: 14px;
+}
+
+.winner-prize {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 3px;
+}
+
+.winner-blessing {
+  color: #FF9800;
+  font-size: clamp(0.8rem, 2.5vw, 0.95rem);
+  opacity: 0.85;
+  line-height: 1.6;
+}
+
+/* ── Footer chant ────────────────────────────── */
+.footer-chant {
+  font-size: 0.78rem;
+  letter-spacing: 2.5px;
+  color: #FF9800;
+  text-transform: uppercase;
+  opacity: 0.55;
+  margin-top: 32px;
+}
