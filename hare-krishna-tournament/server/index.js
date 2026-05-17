@@ -41,17 +41,21 @@ app.get('/api/scores', (req, res) => {
   res.json(scores);
 });
 
-// POST update todayNaam (or defaultScore)  →  { name: "Hari Das", todayNaam: 3000 }
+// POST single  →  { name: "Hari Das", todayNaam: 3000 }
+// POST bulk    →  [{ name: "Hari Das", todayNaam: 3000 }, { name: "Ramu Das", todayNaam: 5000 }]
 app.post('/api/scores', (req, res) => {
-  const { name, defaultScore, todayNaam } = req.body;
+  const updates = Array.isArray(req.body) ? req.body : [req.body];
   const scores = getScores();
-  const idx = scores.findIndex(s => s.name === name);
-  if (idx === -1) return res.status(404).json({ error: 'Contestant not found' });
-  if (defaultScore !== undefined) scores[idx].defaultScore = defaultScore;
-  if (todayNaam    !== undefined) scores[idx].todayNaam    = todayNaam;
+
+  for (const { name, defaultScore, todayNaam } of updates) {
+    const idx = scores.findIndex(s => s.name === name);
+    if (idx === -1) continue;
+    if (defaultScore !== undefined) scores[idx].defaultScore = defaultScore;
+    if (todayNaam    !== undefined) scores[idx].todayNaam    = todayNaam;
+    console.log(`Updated: ${name} → defaultScore:${scores[idx].defaultScore} todayNaam:${scores[idx].todayNaam} score:${computeScore(scores[idx])}`);
+  }
+
   saveScores(scores);
-  const updated = { ...scores[idx], score: computeScore(scores[idx]) };
-  console.log(`Updated: ${name} → defaultScore:${updated.defaultScore} todayNaam:${updated.todayNaam} score:${updated.score}`);
   res.json(scores.map(c => ({ ...c, score: computeScore(c) })));
 });
 
