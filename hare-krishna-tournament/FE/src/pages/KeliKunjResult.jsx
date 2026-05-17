@@ -127,10 +127,16 @@ export default function KeliKunjResult() {
             <span className="title-highlight"> Results</span>
           </h1>
           {anyDeclared && (
-            <div className="final-day-badge">
-              <span className="fire">🎉</span>
-              <span>WINNERS DECLARED</span>
-              <span className="fire">🎉</span>
+            <div className="badge-wrap">
+              {/* burst particles */}
+              {[...Array(12)].map((_, i) => (
+                <span key={i} className="burst-dot" style={{ '--i': i }} />
+              ))}
+              <div className="final-day-badge">
+                <span className="fire">🎉</span>
+                <span>WINNERS DECLARED</span>
+                <span className="fire">🎉</span>
+              </div>
             </div>
           )}
         </div>

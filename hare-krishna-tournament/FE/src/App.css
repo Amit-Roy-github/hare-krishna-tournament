@@ -88,10 +88,12 @@
 
 /* ── Final Day badge ─────────────────────────── */
 .final-day-badge {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  background: linear-gradient(135deg, #FF5722, #FF9800, #FFD700);
+  background: linear-gradient(135deg, #FF5722, #FF9800, #FFD700, #FF9800, #FF5722);
+  background-size: 300% 100%;
   color: #000;
   font-size: clamp(1.3rem, 4vw, 1.8rem);
   font-weight: 900;
@@ -100,7 +102,34 @@
   border-radius: 50px;
   margin-bottom: 24px;
   box-shadow: 0 0 30px #FF980088, 0 0 60px #FF572244;
-  animation: pulse 1.8s ease-in-out infinite;
+  animation: badgePulse 1.8s ease-in-out infinite, badgeShimmer 3s linear infinite;
+  overflow: visible;
+}
+
+/* shimmer sweep across the badge */
+.final-day-badge::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50px;
+  background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.45) 50%, transparent 60%);
+  background-size: 200% 100%;
+  animation: shimmerSweep 2s linear infinite;
+}
+
+@keyframes badgePulse {
+  0%, 100% { box-shadow: 0 0 30px #FF980088, 0 0 60px #FF572244; transform: scale(1); }
+  50%       { box-shadow: 0 0 55px #FFD700cc, 0 0 100px #FF9800aa; transform: scale(1.05); }
+}
+
+@keyframes badgeShimmer {
+  0%   { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+
+@keyframes shimmerSweep {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 }
 
 @keyframes pulse {
@@ -108,7 +137,28 @@
   50%       { box-shadow: 0 0 50px #FFD700aa, 0 0 90px #FF9800aa; transform: scale(1.04); }
 }
 
-.fire { font-size: 1.4rem; }
+/* 🎉 emoji — pop in then orbit-bounce */
+.fire {
+  font-size: 1.6rem;
+  display: inline-block;
+  animation: confettiBurst 0.6s cubic-bezier(0.22, 1, 0.36, 1) both,
+             confettiFloat  2.4s ease-in-out infinite 0.6s;
+}
+.fire:last-child {
+  animation-delay: 0.15s, 0.75s;
+}
+
+@keyframes confettiBurst {
+  0%   { transform: scale(0) rotate(-30deg); opacity: 0; }
+  60%  { transform: scale(1.5) rotate(15deg);  opacity: 1; }
+  100% { transform: scale(1)   rotate(0deg);   opacity: 1; }
+}
+
+@keyframes confettiFloat {
+  0%, 100% { transform: translateY(0)    rotate(0deg)   scale(1);    }
+  25%       { transform: translateY(-8px) rotate(-12deg) scale(1.15); }
+  75%       { transform: translateY(5px)  rotate(10deg)  scale(0.95); }
+}
 
 /* ── Subtitle ────────────────────────────────── */
 .subtitle {
@@ -1385,4 +1435,52 @@
   color: rgba(255,255,255,0.5);
   font-size: 1.05rem;
   line-height: 1.8;
+}
+
+/* ── Badge burst particles ─────────────────────── */
+.badge-wrap {
+  position: relative;
+  display: inline-block;
+  margin-bottom: 24px;
+}
+/* pull the final-day-badge's own margin since badge-wrap owns it */
+.badge-wrap .final-day-badge {
+  margin-bottom: 0;
+}
+
+.burst-dot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: conic-gradient(
+    #FFD700, #FF9800, #FF5722, #E91E63, #9C27B0, #2196F3, #4CAF50, #FFD700
+  );
+  /* pick one color slice per dot based on index */
+  background: hsl(calc(var(--i) * 30deg), 100%, 60%);
+  transform: translate(-50%, -50%);
+  animation: burstFly 1.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(var(--i) * 0.05s);
+}
+
+@keyframes burstFly {
+  0% {
+    transform: translate(-50%, -50%) rotate(calc(var(--i) * 30deg)) translateY(0) scale(0);
+    opacity: 1;
+  }
+  60% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) rotate(calc(var(--i) * 30deg)) translateY(-55px) scale(1);
+    opacity: 0;
+  }
+}
+
+/* repeat the burst on a loop */
+.burst-dot {
+  animation: burstFly 1.8s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+  animation-delay: calc(var(--i) * 0.12s);
 }
