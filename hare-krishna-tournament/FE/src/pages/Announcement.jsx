@@ -62,7 +62,7 @@ export default function Announcement() {
 
           <div className="final-day-badge">
             <span className="fire">🔥</span>
-            <span>FINAL DAY</span>
+            <span>FINALE</span>
             <span className="fire">🔥</span>
           </div>
 
