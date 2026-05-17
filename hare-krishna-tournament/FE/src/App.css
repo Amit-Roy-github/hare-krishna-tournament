@@ -605,6 +605,15 @@
   opacity: 0.8;
 }
 
+.winner-name {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+  text-shadow: 0 0 12px rgba(255,215,0,0.5);
+}
+
 .winner-label {
   font-size: 0.68rem;
   color: #aaa;

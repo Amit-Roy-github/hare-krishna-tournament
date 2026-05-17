@@ -2,32 +2,41 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axiosClient from '../api/axiosClient'
 
-const winners = [
-  { rank: '1st', emoji: '🥇', color: '#FFD700', glow: '#FFD70088', label: 'Champion',      prize: 400 },
-  { rank: '2nd', emoji: '🥈', color: '#C0C0C0', glow: '#C0C0C088', label: 'Runner Up',     prize: 100 },
-  { rank: '3rd', emoji: '🥉', color: '#CD7F32', glow: '#CD7F3288', label: '2nd Runner Up', prize: 50  },
+const RANK_META = [
+  { key: '_1', rank: '1st', emoji: '🥇', color: '#FFD700', glow: '#FFD70088', label: 'Champion'      },
+  { key: '_2', rank: '2nd', emoji: '🥈', color: '#C0C0C0', glow: '#C0C0C088', label: 'Runner Up'     },
+  { key: '_3', rank: '3rd', emoji: '🥉', color: '#CD7F32', glow: '#CD7F3288', label: '2nd Runner Up' },
 ]
 
-function WinnerCard({ winner, index }) {
+function WinnerCard({ meta, week, index }) {
   const [visible, setVisible] = useState(false)
   useEffect(() => {
     const t = setTimeout(() => setVisible(true), 400 + index * 250)
     return () => clearTimeout(t)
   }, [index])
 
+  const declared  = week?.resultDeclared
+  const name      = week?.winners?.[meta.key]?.bhaktName
+  const prize     = week?.prizePool?.[meta.key] ?? 0
+
   return (
     <div
       className={`winner-card ${visible ? 'winner-card--visible' : ''}`}
-      style={{ '--glow': winner.glow, '--border': winner.color }}
+      style={{ '--glow': meta.glow, '--border': meta.color }}
     >
-      <div className="winner-medal">{winner.emoji}</div>
-      <div className="winner-rank" style={{ color: winner.color }}>{winner.rank}</div>
-      <div className="winner-tbd">To be announced</div>
-      <div className="winner-label">{winner.label}</div>
-      <div className="winner-prize">
-        <span className="rupee">₹</span>
-        <span className="amount">{winner.prize}</span>
-      </div>
+      <div className="winner-medal">{meta.emoji}</div>
+      <div className="winner-rank" style={{ color: meta.color }}>{meta.rank}</div>
+      {declared && name
+        ? <div className="winner-name">{name}</div>
+        : <div className="winner-tbd">To be announced</div>
+      }
+      <div className="winner-label">{meta.label}</div>
+      {prize > 0 && (
+        <div className="winner-prize">
+          <span className="rupee">₹</span>
+          <span className="amount">{prize}</span>
+        </div>
+      )}
     </div>
   )
 }
@@ -35,18 +44,28 @@ function WinnerCard({ winner, index }) {
 export default function Home() {
   const navigate = useNavigate()
   const [contestants, setContestants] = useState([])
+  const [latestWeek,  setLatestWeek]  = useState(null)
 
   useEffect(() => {
+    // scores — poll every 5s
     const fetchScores = async () => {
       try {
         const { data } = await axiosClient.get('/scores')
         setContestants(data)
-      } catch {
-        // silent — keeps last known scores on screen
-      }
+      } catch {}
     }
     fetchScores()
     const interval = setInterval(fetchScores, 5000)
+
+    // keliKunj — fetch once (latest declared week)
+    axiosClient.get('/keliKunj').then(({ data }) => {
+      const declared = data.filter(w => w.resultDeclared)
+      if (declared.length > 0) {
+        // already sorted desc by week, pick first
+        setLatestWeek(declared[0])
+      }
+    }).catch(() => {})
+
     return () => clearInterval(interval)
   }, [])
 
@@ -106,13 +125,17 @@ export default function Home() {
           {/* LEFT — Winners */}
           <div className="col-winners">
             <div className="winner-crown">👑</div>
-            <h2 className="winner-heading">Winners Declared!</h2>
+            <h2 className="winner-heading">
+              {latestWeek ? `Week ${latestWeek.keliKunjWeek} Winners!` : 'Winners Declared!'}
+            </h2>
             <p className="winner-sub">
-              By the grace of Shri Krishna the champions have emerged.
+              {latestWeek
+                ? 'By the grace of Shri Krishna the champions have emerged.'
+                : 'Results will be revealed once declared by the admin.'}
             </p>
             <div className="winner-grid winner-grid--col">
-              {winners.map((w, i) => (
-                <WinnerCard key={w.rank} winner={w} index={i} />
+              {RANK_META.map((meta, i) => (
+                <WinnerCard key={meta.key} meta={meta} week={latestWeek} index={i} />
               ))}
             </div>
             <p className="winner-blessing">
