@@ -126,7 +126,7 @@ export default function Home() {
           <div className="col-winners">
             <div className="winner-crown">👑</div>
             <h2 className="winner-heading">
-              {latestWeek ? `Week ${latestWeek.keliKunjWeek} Winners!` : 'Winners Declared!'}
+              {latestWeek ? `Week ${latestWeek.keliKunjWeek} Winners!` : 'Be the Winners'}
             </h2>
             <p className="winner-sub">
               {latestWeek
