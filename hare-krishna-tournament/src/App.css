@@ -228,6 +228,144 @@
   opacity: 0.9;
 }
 
+/* ── Wide container (home page) ─────────────── */
+.container--wide {
+  max-width: 1100px;
+}
+
+/* ── Two column layout ───────────────────────── */
+.home-columns {
+  display: flex;
+  gap: 40px;
+  align-items: flex-start;
+  margin-bottom: 32px;
+}
+
+.col-winners {
+  flex: 1;
+  text-align: center;
+}
+
+.col-scores {
+  flex: 1;
+  text-align: left;
+}
+
+.winner-grid--col {
+  flex-direction: row;
+  justify-content: center;
+}
+
+/* stack on small screens */
+@media (max-width: 700px) {
+  .home-columns {
+    flex-direction: column;
+  }
+  .col-scores {
+    text-align: center;
+  }
+}
+
+/* ── Scoreboard ──────────────────────────────── */
+.scoreboard-section {
+  margin-bottom: 40px;
+}
+
+.scoreboard-title {
+  font-size: clamp(1.2rem, 4vw, 1.6rem);
+  color: #FFD700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+}
+
+.live-badge {
+  font-size: 0.65rem;
+  color: #ff4444;
+  letter-spacing: 1px;
+  vertical-align: middle;
+  animation: livePulse 1.2s ease-in-out infinite;
+}
+
+@keyframes livePulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.3; }
+}
+
+.scoreboard-table {
+  width: 100%;
+  border-collapse: collapse;
+  border-radius: 16px;
+  overflow: hidden;
+  font-size: clamp(0.85rem, 2.5vw, 1rem);
+}
+
+.scoreboard-table thead tr {
+  background: rgba(255, 152, 0, 0.15);
+  border-bottom: 1px solid #FF980044;
+}
+
+.scoreboard-table th {
+  padding: 12px 16px;
+  color: #FF9800;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  text-align: left;
+}
+
+.scoreboard-table th:last-child,
+.scoreboard-table td:last-child {
+  text-align: right;
+}
+
+.scoreboard-table th:first-child,
+.scoreboard-table td:first-child {
+  text-align: center;
+  width: 60px;
+}
+
+.scoreboard-table tbody tr {
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  transition: background 0.2s ease;
+}
+
+.scoreboard-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.scoreboard-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.rank-cell  { font-size: 1.3rem; padding: 14px 16px; }
+.name-cell  { padding: 14px 16px; color: #fff; font-weight: 600; }
+.score-cell { padding: 14px 16px; font-weight: 800; font-size: 1.1rem; }
+
+/* Row colours */
+.row-gold   { background: rgba(255, 215,  0, 0.08); }
+.row-gold   .score-cell { color: #FFD700; }
+.row-gold   .name-cell  { color: #FFD700; }
+
+.row-silver { background: rgba(192, 192, 192, 0.07); }
+.row-silver .score-cell { color: #C0C0C0; }
+.row-silver .name-cell  { color: #C0C0C0; }
+
+.row-bronze { background: rgba(205, 127, 50, 0.07); }
+.row-bronze .score-cell { color: #CD7F32; }
+.row-bronze .name-cell  { color: #CD7F32; }
+
+.row-4 { background: rgba(100, 181, 246, 0.07); }
+.row-4 .rank-cell  { color: #64B5F6; }
+.row-4 .name-cell  { color: #64B5F6; }
+.row-4 .score-cell { color: #64B5F6; }
+
+.row-5 { background: rgba(129, 199, 132, 0.07); }
+.row-5 .rank-cell  { color: #81C784; }
+.row-5 .name-cell  { color: #81C784; }
+.row-5 .score-cell { color: #81C784; }
+
 /* ── Section divider ─────────────────────────── */
 .section-divider {
   display: flex;
@@ -325,12 +463,13 @@
   margin-bottom: 6px;
 }
 
-.winner-name {
-  font-size: 1.5rem;
-  font-weight: 900;
-  color: #fff;
-  margin-bottom: 4px;
+.winner-tbd {
+  font-size: 0.78rem;
+  color: #FF9800;
+  font-style: italic;
   letter-spacing: 0.5px;
+  margin-bottom: 4px;
+  opacity: 0.8;
 }
 
 .winner-label {
@@ -353,6 +492,26 @@
   font-size: clamp(0.8rem, 2.5vw, 0.95rem);
   opacity: 0.85;
   line-height: 1.6;
+}
+
+/* ── Nav button ──────────────────────────────── */
+.nav-btn {
+  display: inline-block;
+  margin: 24px 0 32px;
+  padding: 10px 28px;
+  border: 1px solid #FF980066;
+  border-radius: 50px;
+  background: rgba(255, 152, 0, 0.08);
+  color: #FF9800;
+  font-size: 0.9rem;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.nav-btn:hover {
+  background: rgba(255, 152, 0, 0.18);
+  border-color: #FF9800;
 }
 
 /* ── Footer chant ────────────────────────────── */
