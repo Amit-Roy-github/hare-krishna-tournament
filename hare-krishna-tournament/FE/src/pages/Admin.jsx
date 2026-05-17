@@ -377,7 +377,7 @@ function KrishnaDasList({ users, onRefresh }) {
 const EMPTY_KELIKUNJ = {
   keliKunjWeek: '',
   winners:   { _1: '', _2: '', _3: '' },
-  prizePool: { _1: '', _2: '' },
+  prizePool: { _1: '', _2: '', _3: '' },
 }
 
 function KeliKunjSection({ users, keliKunjList, onRefresh }) {
@@ -399,7 +399,7 @@ function KeliKunjSection({ users, keliKunjList, onRefresh }) {
       await createKeliKunj({
         keliKunjWeek: Number(form.keliKunjWeek),
         winners:   { _1: form.winners._1   || null, _2: form.winners._2   || null, _3: form.winners._3   || null },
-        prizePool: { _1: Number(form.prizePool._1) || 0, _2: Number(form.prizePool._2) || 0 },
+        prizePool: { _1: Number(form.prizePool._1) || 0, _2: Number(form.prizePool._2) || 0, _3: Number(form.prizePool._3) || 0 },
       })
       setForm(EMPTY_KELIKUNJ)
       onRefresh()
@@ -415,7 +415,7 @@ function KeliKunjSection({ users, keliKunjList, onRefresh }) {
     setEditId(k._id)
     setEditForm({
       winners:        { _1: k.winners?._1?._id || '', _2: k.winners?._2?._id || '', _3: k.winners?._3?._id || '' },
-      prizePool:      { _1: k.prizePool?._1 ?? '', _2: k.prizePool?._2 ?? '' },
+      prizePool:      { _1: k.prizePool?._1 ?? '', _2: k.prizePool?._2 ?? '', _3: k.prizePool?._3 ?? '' },
       resultDeclared: k.resultDeclared ?? false,
     })
   }
@@ -424,12 +424,26 @@ function KeliKunjSection({ users, keliKunjList, onRefresh }) {
     try {
       await updateKeliKunj(editId, {
         winners:        { _1: editForm.winners._1   || null, _2: editForm.winners._2   || null, _3: editForm.winners._3   || null },
-        prizePool:      { _1: Number(editForm.prizePool._1) || 0, _2: Number(editForm.prizePool._2) || 0 },
+        prizePool:      { _1: Number(editForm.prizePool._1) || 0, _2: Number(editForm.prizePool._2) || 0, _3: Number(editForm.prizePool._3) || 0 },
         resultDeclared: editForm.resultDeclared,
       })
       setEditId(null)
       onRefresh()
       toast.success('KeliKunj updated!')
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Update failed')
+    }
+  }
+
+  const toggleDeclared = async (k) => {
+    try {
+      await updateKeliKunj(k._id, {
+        winners:        { _1: k.winners?._1?._id || null, _2: k.winners?._2?._id || null, _3: k.winners?._3?._id || null },
+        prizePool:      { _1: k.prizePool?._1 || 0, _2: k.prizePool?._2 || 0, _3: k.prizePool?._3 || 0 },
+        resultDeclared: !k.resultDeclared,
+      })
+      onRefresh()
+      toast.success(`Week ${k.keliKunjWeek}: result ${!k.resultDeclared ? 'declared' : 'hidden'}`)
     } catch (err) {
       toast.error(err.response?.data?.error || 'Update failed')
     }
@@ -486,9 +500,12 @@ function KeliKunjSection({ users, keliKunjList, onRefresh }) {
               value={form.prizePool._2} onChange={e => setPrize('_2', e.target.value)} />
           </div>
 
-          <div className="kk-place-row kk-place-row--no-prize">
+          <div className="kk-place-row">
             <span className="kk-place-label">🥉 3rd Place</span>
             <WinnerSelect value={form.winners._3} onChange={v => setWinner('_3', v)} />
+            <span className="kk-place-label kk-prize-label">Prize 3rd (₹)</span>
+            <input className="admin-input kk-prize-input" type="number" min="0" placeholder="50"
+              value={form.prizePool._3} onChange={e => setPrize('_3', e.target.value)} />
           </div>
 
         </div>
@@ -520,9 +537,14 @@ function KeliKunjSection({ users, keliKunjList, onRefresh }) {
                     </>
                   ) : (
                     <>
-                      <span className={`kk-declared-badge ${k.resultDeclared ? 'kk-declared--yes' : 'kk-declared--no'}`}>
-                        {k.resultDeclared ? '✅ Declared' : '⏳ Pending'}
-                      </span>
+                      <span className="admin-field-label" style={{ fontSize: '0.8rem', opacity: 0.7 }}>Result Declared</span>
+                      <Switch.Root
+                        className={`switch-root ${k.resultDeclared ? 'switch-root--on' : 'switch-root--off'}`}
+                        checked={!!k.resultDeclared}
+                        onCheckedChange={() => toggleDeclared(k)}
+                      >
+                        <Switch.Thumb className="switch-thumb" />
+                      </Switch.Root>
                       <button className="kl-btn kl-btn--edit" onClick={() => startEdit(k)}><Pencil size={15}/></button>
                     </>
                   )}
@@ -558,11 +580,17 @@ function KeliKunjSection({ users, keliKunjList, onRefresh }) {
                 }
               </div>
 
-              <div className="kk-place-row kk-place-row--no-prize">
+              <div className="kk-place-row">
                 <span className="kk-place-label">🥉 3rd Place</span>
                 {editId === k._id
                   ? <WinnerSelect value={editForm.winners._3} onChange={v => setEditWinner('_3', v)} />
                   : <span className="kl-meta">{k.winners?._3?.bhaktName || '—'}</span>
+                }
+                <span className="kk-place-label kk-prize-label">Prize 3rd (₹)</span>
+                {editId === k._id
+                  ? <input className="admin-input kk-prize-input" type="number" min="0"
+                      value={editForm.prizePool._3} onChange={e => setEditPrize('_3', e.target.value)} />
+                  : <span className="kl-meta">₹{k.prizePool?._3 ?? 0}</span>
                 }
               </div>
 

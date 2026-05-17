@@ -78,8 +78,8 @@ function WeekCard({ week, index }) {
                   <span className="kk-mystery-label">To be announced</span>
                 </div>
               )}
-              {/* prize — only show for 1st & 2nd */}
-              {declared && r.key !== '_3' && (
+              {/* prize */}
+              {declared && (
                 <div className="kk-winner-prize">
                   <span className="kk-prize-rupee">₹</span>
                   <span className="kk-prize-amount">{week.prizePool?.[r.key] ?? 0}</span>
