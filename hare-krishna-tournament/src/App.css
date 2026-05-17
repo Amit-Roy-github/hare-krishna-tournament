@@ -264,6 +264,27 @@
   .col-scores {
     text-align: center;
   }
+
+  /* scrollable table on mobile */
+  .col-scores {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .scoreboard-table {
+    min-width: 420px;
+  }
+
+  .rank-cell,
+  .name-cell,
+  .today-naam-cell,
+  .naam-score-cell,
+  .score-cell {
+    padding: 10px 10px;
+    font-size: 0.82rem;
+  }
+
+  .rank-cell { font-size: 1rem; }
 }
 
 /* ── Scoreboard ──────────────────────────────── */
