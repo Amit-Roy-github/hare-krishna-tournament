@@ -1,5 +1,5 @@
 import connectDB                        from '../DB/connection.js';
-import { seedIfEmpty, findByBhaktName } from '../services/krishnadasService.js';
+import { seedIfEmpty, findByBhaktName } from '../services/krishnaDasService.js';
 import { upsertTodaySadhana, buildScoresResponse } from '../services/sadhanaService.js';
 
 const DEFAULT_CONTESTANTS = [
@@ -30,9 +30,9 @@ export default async function handler(req, res) {
       const updates = Array.isArray(req.body) ? req.body : [req.body];
 
       for (const { bhaktName, ...fields } of updates) {
-        const krishnadas = await findByBhaktName(bhaktName);
-        if (!krishnadas) continue;
-        await upsertTodaySadhana(krishnadas._id, fields);
+        const krishnaDas = await findByBhaktName(bhaktName);
+        if (!krishnaDas) continue;
+        await upsertTodaySadhana(krishnaDas._id, fields);
       }
 
       const scores = await buildScoresResponse(DEFAULT_CONTESTANTS);

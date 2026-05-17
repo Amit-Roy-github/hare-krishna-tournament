@@ -1,5 +1,5 @@
 import Sadhana    from '../DB/models/Sadhana.js';
-import Krishnadas from '../DB/models/Krishnadas.js';
+import KrishnaDas from '../DB/models/KrishnaDas.js';
 
 // ── Helpers ─────────────────────────────────────
 
@@ -19,7 +19,7 @@ function computeScore(defaultScore, sadhana) {
 // If a record exists for today → update it
 // If not → create a new one (one record per person per day)
 
-export async function upsertTodaySadhana(krishnadasId, fields) {
+export async function upsertTodaySadhana(krishnaDasId, fields) {
   const today = getDayStart();
 
   const allowed = ['naamJaapCount', 'niyam1Point', 'niyam2Point', 'niyam3Point'];
@@ -29,7 +29,7 @@ export async function upsertTodaySadhana(krishnadasId, fields) {
   }
 
   return Sadhana.findOneAndUpdate(
-    { krishnadasId, date: today },
+    { krishnadasId: krishnaDasId, date: today },
     { $set: set },
     { upsert: true, new: true, setDefaultsOnInsert: true }
   );
@@ -50,7 +50,7 @@ export async function getTodaySadhanaMap() {
 // Only includes contestants who are active in the current tournament
 
 export async function buildScoresResponse(defaultContestants) {
-  const contestants = await Krishnadas.find({ includeInPlayground: true }).lean();
+  const contestants = await KrishnaDas.find({ includeInPlayground: true }).lean();
   const sadhanaMap  = await getTodaySadhanaMap();
 
   return contestants.map(c => {
@@ -70,8 +70,8 @@ export async function buildScoresResponse(defaultContestants) {
 
 // ── Get sadhana history for one krishnadas ──────
 
-export async function getSadhanaHistory(krishnadasId) {
-  return Sadhana.find({ krishnadasId })
+export async function getSadhanaHistory(krishnaDasId) {
+  return Sadhana.find({ krishnadasId: krishnaDasId })
     .sort({ date: -1 })
     .lean();
 }

@@ -4,7 +4,7 @@ const SadhanaSchema = new mongoose.Schema(
   {
     krishnadasId: {
       type:     mongoose.Schema.Types.ObjectId,
-      ref:      'Krishnadas',
+      ref:      'KrishnaDas',
       required: true,
     },
     date: {

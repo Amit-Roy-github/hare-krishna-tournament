@@ -865,6 +865,70 @@
 .kl-btn--save   { background: rgba(76,175,80,0.22); color: #A5D6A7; }
 .kl-btn--cancel { background: rgba(255,255,255,0.1); color: #bbb;  }
 
+/* ── KeliKunj Section ───────────────────────── */
+.kk-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+  align-items: flex-end;
+  margin-bottom: 1.5rem;
+}
+
+.kk-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  flex: 1 1 130px;
+  min-width: 110px;
+}
+
+.kk-field--btn {
+  flex: 0 0 auto;
+}
+
+.kk-create-btn {
+  margin-bottom: 0;
+  padding: 0.55rem 1.25rem;
+  width: auto;
+  font-size: 0.9rem;
+}
+
+.kk-select {
+  cursor: pointer;
+}
+
+.kk-select option {
+  background: #1a1025;
+  color: #fff;
+}
+
+.kk-list {
+  border: 1px solid #FF980033;
+  border-radius: 1rem;
+  overflow: hidden;
+}
+
+.kk-list-header,
+.kk-list-row {
+  display: grid;
+  grid-template-columns: 0.6fr 1fr 1fr 1fr 0.8fr 0.8fr 0.6fr;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.65rem 1rem;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.kk-list-row:last-child { border-bottom: none; }
+
+.kk-list-header {
+  background: rgba(255,152,0,0.12);
+  font-size: 0.78rem;
+  color: #FF9800;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+}
+
 /* ── Radix Switch ────────────────────────────── */
 .switch-root {
   position: relative;

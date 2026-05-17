@@ -6,8 +6,10 @@ import * as AlertDialog                      from '@radix-ui/react-alert-dialog'
 import * as Tooltip                          from '@radix-ui/react-tooltip'
 import { Pencil, Trash2, Check, X }         from 'lucide-react'
 import { getScores, updateScores }           from '../api/sadhanaApi'
-import { getKrishnadasList, createKrishnadas,
-         updateKrishnadas, deleteKrishnadas } from '../api/krishnadasApi'
+import { getKrishnaDasList, createKrishnaDas,
+         updateKrishnaDas, deleteKrishnaDas } from '../api/krishnaDasApi'
+import { getKeliKunjList, createKeliKunj,
+         updateKeliKunj }                    from '../api/keliKunjApi'
 
 // ── Constants ────────────────────────────────────
 const EMPTY_USER = { bhaktName: '', email: '', phone: '', sansarName: '' }
@@ -86,7 +88,7 @@ function RegisterSection({ onCreated }) {
     e.preventDefault()
     setLoading(true)
     try {
-      await createKrishnadas(form)
+      await createKrishnaDas(form)
       setForm(EMPTY_USER)
       onCreated()
       toast.success('Krishnadas registered!')
@@ -222,8 +224,8 @@ function UpdateSadhanaSection({ scores, onUpdated }) {
   )
 }
 
-// ── Krishnadas List ──────────────────────────────
-function KrishnadasList({ users, onRefresh }) {
+// ── KrishnaDas List ──────────────────────────────
+function KrishnaDasList({ users, onRefresh }) {
   const [editId,   setEditId]   = useState(null)
   const [editForm, setEditForm] = useState({})
 
@@ -241,7 +243,7 @@ function KrishnadasList({ users, onRefresh }) {
 
   const saveEdit = async (id) => {
     try {
-      await updateKrishnadas(id, editForm)
+      await updateKrishnaDas(id, editForm)
       setEditId(null)
       onRefresh()
       toast.success('Updated successfully!')
@@ -252,7 +254,7 @@ function KrishnadasList({ users, onRefresh }) {
 
   const handleToggle = async (u) => {
     try {
-      await updateKrishnadas(u._id, { includeInPlayground: !u.includeInPlayground })
+      await updateKrishnaDas(u._id, { includeInPlayground: !u.includeInPlayground })
       onRefresh()
       toast.success(`${u.bhaktName} ${!u.includeInPlayground ? 'added to' : 'removed from'} tournament`)
     } catch {
@@ -262,7 +264,7 @@ function KrishnadasList({ users, onRefresh }) {
 
   const handleDelete = async (id) => {
     try {
-      await deleteKrishnadas(id)
+      await deleteKrishnaDas(id)
       onRefresh()
       toast.success('Krishnadas deleted')
     } catch {
@@ -371,20 +373,188 @@ function KrishnadasList({ users, onRefresh }) {
   )
 }
 
+// ── KeliKunj Section ─────────────────────────────
+const EMPTY_KELIKUNJ = {
+  keliKunjWeek: '',
+  winners:   { _1: '', _2: '', _3: '' },
+  prizePool: { _1: '', _2: '' },
+}
+
+function KeliKunjSection({ users, keliKunjList, onRefresh }) {
+  const [form,    setForm]    = useState(EMPTY_KELIKUNJ)
+  const [editId,  setEditId]  = useState(null)
+  const [editForm,setEditForm]= useState({})
+  const [loading, setLoading] = useState(false)
+
+  const setWinner   = (key, val) => setForm(p => ({ ...p, winners:   { ...p.winners,   [key]: val } }))
+  const setPrize    = (key, val) => setForm(p => ({ ...p, prizePool: { ...p.prizePool, [key]: val } }))
+
+  const setEditWinner = (key, val) => setEditForm(p => ({ ...p, winners:   { ...p.winners,   [key]: val } }))
+  const setEditPrize  = (key, val) => setEditForm(p => ({ ...p, prizePool: { ...p.prizePool, [key]: val } }))
+
+  const handleCreate = async (e) => {
+    e.preventDefault()
+    setLoading(true)
+    try {
+      await createKeliKunj({
+        keliKunjWeek: Number(form.keliKunjWeek),
+        winners:   { _1: form.winners._1   || null, _2: form.winners._2   || null, _3: form.winners._3   || null },
+        prizePool: { _1: Number(form.prizePool._1) || 0, _2: Number(form.prizePool._2) || 0 },
+      })
+      setForm(EMPTY_KELIKUNJ)
+      onRefresh()
+      toast.success('KeliKunj week created!')
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Failed to create')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const startEdit = (k) => {
+    setEditId(k._id)
+    setEditForm({
+      winners:   { _1: k.winners?._1?._id || '', _2: k.winners?._2?._id || '', _3: k.winners?._3?._id || '' },
+      prizePool: { _1: k.prizePool?._1 ?? '', _2: k.prizePool?._2 ?? '' },
+    })
+  }
+
+  const saveEdit = async () => {
+    try {
+      await updateKeliKunj(editId, {
+        winners:   { _1: editForm.winners._1   || null, _2: editForm.winners._2   || null, _3: editForm.winners._3   || null },
+        prizePool: { _1: Number(editForm.prizePool._1) || 0, _2: Number(editForm.prizePool._2) || 0 },
+      })
+      setEditId(null)
+      onRefresh()
+      toast.success('KeliKunj updated!')
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Update failed')
+    }
+  }
+
+  const WinnerSelect = ({ value, onChange }) => (
+    <select className="admin-input kk-select" value={value} onChange={e => onChange(e.target.value)}>
+      <option value="">— None —</option>
+      {users.map(u => (
+        <option key={u._id} value={u._id}>{u.bhaktName}</option>
+      ))}
+    </select>
+  )
+
+  return (
+    <div className="admin-section">
+      <h2 className="admin-section-title">🏆 KeliKunj — Winners</h2>
+
+      {/* ── Create form ── */}
+      <form onSubmit={handleCreate}>
+        <div className="kk-form">
+          <div className="kk-field">
+            <label className="admin-field-label">Week No. *</label>
+            <input
+              className="admin-input"
+              type="number" min="1"
+              placeholder="e.g. 1"
+              value={form.keliKunjWeek}
+              onChange={e => setForm(p => ({ ...p, keliKunjWeek: e.target.value }))}
+              required
+            />
+          </div>
+
+          <div className="kk-field">
+            <label className="admin-field-label">🥇 1st Place</label>
+            <WinnerSelect value={form.winners._1} onChange={v => setWinner('_1', v)} />
+          </div>
+          <div className="kk-field">
+            <label className="admin-field-label">🥈 2nd Place</label>
+            <WinnerSelect value={form.winners._2} onChange={v => setWinner('_2', v)} />
+          </div>
+          <div className="kk-field">
+            <label className="admin-field-label">🥉 3rd Place</label>
+            <WinnerSelect value={form.winners._3} onChange={v => setWinner('_3', v)} />
+          </div>
+
+          <div className="kk-field">
+            <label className="admin-field-label">Prize 1st (₹)</label>
+            <input className="admin-input" type="number" min="0" placeholder="400"
+              value={form.prizePool._1} onChange={e => setPrize('_1', e.target.value)} />
+          </div>
+          <div className="kk-field">
+            <label className="admin-field-label">Prize 2nd (₹)</label>
+            <input className="admin-input" type="number" min="0" placeholder="100"
+              value={form.prizePool._2} onChange={e => setPrize('_2', e.target.value)} />
+          </div>
+
+          <div className="kk-field kk-field--btn">
+            <label className="admin-field-label">&nbsp;</label>
+            <button className="admin-submit kk-create-btn" type="submit" disabled={loading}>
+              {loading ? 'Creating…' : '+ Create Week'}
+            </button>
+          </div>
+        </div>
+      </form>
+
+      {/* ── List ── */}
+      {keliKunjList.length > 0 && (
+        <div className="kk-list">
+          <div className="kk-list-header">
+            <span>Week</span>
+            <span>🥇 1st</span>
+            <span>🥈 2nd</span>
+            <span>🥉 3rd</span>
+            <span>Prize 1st</span>
+            <span>Prize 2nd</span>
+            <span>Edit</span>
+          </div>
+
+          {keliKunjList.map(k => (
+            <div key={k._id} className="kk-list-row">
+              {editId === k._id ? (
+                <>
+                  <span className="kl-name">Week {k.keliKunjWeek}</span>
+                  <WinnerSelect value={editForm.winners._1} onChange={v => setEditWinner('_1', v)} />
+                  <WinnerSelect value={editForm.winners._2} onChange={v => setEditWinner('_2', v)} />
+                  <WinnerSelect value={editForm.winners._3} onChange={v => setEditWinner('_3', v)} />
+                  <input className="admin-input" type="number" min="0"
+                    value={editForm.prizePool._1} onChange={e => setEditPrize('_1', e.target.value)} />
+                  <input className="admin-input" type="number" min="0"
+                    value={editForm.prizePool._2} onChange={e => setEditPrize('_2', e.target.value)} />
+                  <div className="kl-actions">
+                    <button className="kl-btn kl-btn--save"   onClick={saveEdit}><Check size={15}/></button>
+                    <button className="kl-btn kl-btn--cancel" onClick={() => setEditId(null)}><X size={15}/></button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <span className="kl-name">Week {k.keliKunjWeek}</span>
+                  <span className="kl-meta">{k.winners?._1?.bhaktName || '—'}</span>
+                  <span className="kl-meta">{k.winners?._2?.bhaktName || '—'}</span>
+                  <span className="kl-meta">{k.winners?._3?.bhaktName || '—'}</span>
+                  <span className="kl-meta">₹{k.prizePool?._1 ?? 0}</span>
+                  <span className="kl-meta">₹{k.prizePool?._2 ?? 0}</span>
+                  <button className="kl-btn kl-btn--edit" onClick={() => startEdit(k)}><Pencil size={15}/></button>
+                </>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ── Main Admin page ──────────────────────────────
 export default function Admin() {
   const navigate = useNavigate()
-  const [scores, setScores] = useState([])
-  const [users,  setUsers]  = useState([])
+  const [scores,       setScores]       = useState([])
+  const [users,        setUsers]        = useState([])
+  const [keliKunjList, setKeliKunjList] = useState([])
 
-  const loadScores = async () => {
-    try { const { data } = await getScores();         setScores(data) } catch {}
-  }
-  const loadUsers = async () => {
-    try { const { data } = await getKrishnadasList(); setUsers(data)  } catch {}
-  }
+  const loadScores    = async () => { try { const { data } = await getScores();         setScores(data)       } catch {} }
+  const loadUsers     = async () => { try { const { data } = await getKrishnaDasList(); setUsers(data)        } catch {} }
+  const loadKeliKunj  = async () => { try { const { data } = await getKeliKunjList();   setKeliKunjList(data) } catch {} }
 
-  const refresh = () => { loadScores(); loadUsers() }
+  const refresh = () => { loadScores(); loadUsers(); loadKeliKunj() }
 
   useEffect(() => { refresh() }, [])
 
@@ -416,7 +586,11 @@ export default function Admin() {
 
         <div className="admin-divider" />
 
-        <KrishnadasList users={users} onRefresh={refresh} />
+        <KrishnaDasList users={users} onRefresh={refresh} />
+
+        <div className="admin-divider" />
+
+        <KeliKunjSection users={users} keliKunjList={keliKunjList} onRefresh={refresh} />
 
         <button className="nav-btn" style={{ marginTop: '1.5rem' }} onClick={() => navigate('/')}>
           ← Back to Leaderboard
