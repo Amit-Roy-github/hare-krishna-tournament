@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 
-const KrishnadasSchema = new mongoose.Schema(
+const KrishnaDasSchema = new mongoose.Schema(
   {
     bhaktName:   { type: String, required: true, trim: true, unique: true },
     email:       { type: String, trim: true, lowercase: true },
@@ -9,10 +9,10 @@ const KrishnadasSchema = new mongoose.Schema(
     includeInPlayground: { type: Boolean, default: true },
   },
   {
-    collection:  'krishnadas',
+    collection:  'krishnaDas',
     timestamps:  true,           // auto createdAt & updatedAt
   }
 );
 
-export default mongoose.models.Krishnadas
-  || mongoose.model('Krishnadas', KrishnadasSchema);
+export default mongoose.models.KrishnaDas
+  || mongoose.model('KrishnaDas', KrishnaDasSchema);

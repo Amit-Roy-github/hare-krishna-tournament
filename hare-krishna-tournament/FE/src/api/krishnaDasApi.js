@@ -1,6 +1,6 @@
 import axiosClient from './axiosClient';
 
-export const getKrishnadasList   = async ()           => axiosClient.get('/krishnadas');
-export const createKrishnadas    = async (data)        => axiosClient.post('/krishnadas', data);
-export const updateKrishnadas    = async (id, fields)  => axiosClient.patch('/krishnadas', { id, ...fields });
-export const deleteKrishnadas    = async (id)          => axiosClient.delete('/krishnadas', { data: { id } });
+export const getKrishnaDasList   = async ()           => axiosClient.get('/krishnaDas');
+export const createKrishnaDas    = async (data)        => axiosClient.post('/krishnaDas', data);
+export const updateKrishnaDas    = async (id, fields)  => axiosClient.patch('/krishnaDas', { id, ...fields });
+export const deleteKrishnaDas    = async (id)          => axiosClient.delete('/krishnaDas', { data: { id } });

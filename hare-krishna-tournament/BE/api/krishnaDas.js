@@ -1,6 +1,6 @@
 import connectDB                           from '../DB/connection.js';
-import { findAll, createKrishnadas,
-         updateKrishnadas, deleteKrishnadas } from '../services/krishnadasService.js';
+import { findAll, createKrishnaDas,
+         updateKrishnaDas, deleteKrishnaDas } from '../services/krishnaDasService.js';
 import Sadhana                            from '../DB/models/Sadhana.js';
 
 export default async function handler(req, res) {
@@ -13,13 +13,13 @@ export default async function handler(req, res) {
   try {
     await connectDB();
 
-    // GET — list all krishnadas
+    // GET — list all krishnaDas
     if (req.method === 'GET') {
       const list = await findAll();
       return res.json(list);
     }
 
-    // POST — register new krishnadas
+    // POST — register new krishnaDas
     if (req.method === 'POST') {
       const { bhaktName, email, phone, sansarName } = req.body;
 
@@ -27,14 +27,14 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Bhakt name is required' });
       }
 
-      const krishnadas = await createKrishnadas({ bhaktName, email, phone, sansarName });
+      const krishnaDas = await createKrishnaDas({ bhaktName, email, phone, sansarName });
 
       // initialise an empty sadhana record for today
       const today = new Date();
       today.setUTCHours(0, 0, 0, 0);
-      await Sadhana.create({ krishnadasId: krishnadas._id, date: today });
+      await Sadhana.create({ krishnadasId: krishnaDas._id, date: today });
 
-      return res.status(201).json(krishnadas);
+      return res.status(201).json(krishnaDas);
     }
 
     // PATCH — update fields (bhaktName, email, phone, sansarName, isActive)
@@ -42,18 +42,18 @@ export default async function handler(req, res) {
       const { id, ...fields } = req.body;
       if (!id) return res.status(400).json({ error: 'id is required' });
 
-      const updated = await updateKrishnadas(id, fields);
-      if (!updated) return res.status(404).json({ error: 'Krishnadas not found' });
+      const updated = await updateKrishnaDas(id, fields);
+      if (!updated) return res.status(404).json({ error: 'KrishnaDas not found' });
 
       return res.json(updated);
     }
 
-    // DELETE — remove krishnadas and their sadhana records
+    // DELETE — remove krishnaDas and their sadhana records
     if (req.method === 'DELETE') {
       const { id } = req.body;
       if (!id) return res.status(400).json({ error: 'id is required' });
 
-      await deleteKrishnadas(id);
+      await deleteKrishnaDas(id);
       await Sadhana.deleteMany({ krishnadasId: id });
 
       return res.json({ success: true });
@@ -64,7 +64,7 @@ export default async function handler(req, res) {
   } catch (err) {
     console.error(err);
     if (err.code === 11000) {
-      return res.status(409).json({ error: 'A Krishnadas with this bhakt name already exists' });
+      return res.status(409).json({ error: 'A KrishnaDas with this bhakt name already exists' });
     }
     res.status(500).json({ error: err.message });
   }
