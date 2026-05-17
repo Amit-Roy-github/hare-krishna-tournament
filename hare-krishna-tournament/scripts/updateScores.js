@@ -12,7 +12,7 @@ const updates = [
   { name: 'Mohona Das',  todayNaam: 5161 },
   { name: 'Krishna Das', todayNaam: 0    },
   { name: 'Hari Das',    todayNaam: 0    },
-  { name: 'Ramu Das',    todayNaam: 6650 },
+  { name: 'Ramu Das',    todayNaam: 7000 },
 ];
 
 // ─────────────────────────────────────────────────────────────
