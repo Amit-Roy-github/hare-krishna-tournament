@@ -18,6 +18,7 @@ const KeliKunjSchema = new mongoose.Schema(
     prizePool: {
       _1: { type: Number, default: 0, min: 0 },
       _2: { type: Number, default: 0, min: 0 },
+      _3: { type: Number, default: 0, min: 0 },
     },
     resultDeclared: { type: Boolean, default: false },
   },
