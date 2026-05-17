@@ -146,7 +146,7 @@ export default function Home() {
           {/* RIGHT — Leaderboard */}
           <div className="col-scores">
             <h2 className="scoreboard-title">
-              Leaderboard <span className="live-badge">● LIVE</span>
+              Leaderboard {!latestWeek && <span className="live-badge">● LIVE</span>}
             </h2>
             <table className="scoreboard-table">
               <thead>
