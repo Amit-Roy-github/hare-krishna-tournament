@@ -1,7 +1,8 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
-import Home from './pages/Home'
+import Home         from './pages/Home'
 import Announcement from './pages/Announcement'
-import Admin from './pages/Admin'
+import Declaration  from './pages/Declaration'
+import Admin        from './pages/Admin'
 import './App.css'
 
 export default function App() {
@@ -10,6 +11,7 @@ export default function App() {
       <Routes>
         <Route path="/"             element={<Home />} />
         <Route path="/announcement" element={<Announcement />} />
+        <Route path="/declaration"  element={<Declaration />} />
         <Route path="/admin"        element={<Admin />} />
       </Routes>
     </BrowserRouter>

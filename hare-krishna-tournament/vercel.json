@@ -1,8 +1,12 @@
 {
   "installCommand": "npm install",
-  "buildCommand": "npm run build",
+  "buildCommand":   "npm run build",
   "outputDirectory": "dist",
+  "functions": {
+    "BE/api/*.js": {}
+  },
   "rewrites": [
-    { "source": "/((?!api/).*)", "destination": "/index.html" }
+    { "source": "/api/:path*",      "destination": "/BE/api/:path*" },
+    { "source": "/((?!BE/api/).*)", "destination": "/index.html"    }
   ]
 }

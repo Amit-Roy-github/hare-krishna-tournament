@@ -683,3 +683,117 @@
 .admin-preview-rank  { font-size: 1.1rem; width: 28px; }
 .admin-preview-name  { flex: 1; color: #fff; font-size: 0.9rem; }
 .admin-preview-score { color: #FFD700; font-weight: 800; font-size: 1rem; }
+
+/* ── Declaration page ────────────────────────── */
+.declaration-box {
+  background: rgba(255, 255, 255, 0.04);
+  border: 2px solid #FFD70066;
+  border-radius: 24px;
+  padding: 36px 28px;
+  margin-bottom: 32px;
+  box-shadow: 0 0 60px #FFD70022, 0 0 120px #FF980011;
+}
+
+.declaration-crown {
+  font-size: 4rem;
+  animation: bounce 1.5s ease-in-out infinite;
+  margin-bottom: 12px;
+}
+
+.declaration-label {
+  font-size: 0.78rem;
+  letter-spacing: 3px;
+  color: #FF9800;
+  text-transform: uppercase;
+  opacity: 0.85;
+  margin-bottom: 12px;
+}
+
+.declaration-time {
+  font-size: clamp(3.5rem, 14vw, 6rem);
+  font-weight: 900;
+  background: linear-gradient(90deg, #FFD700, #FF9800, #FFD700);
+  background-size: 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: shimmer 3s linear infinite;
+  line-height: 1;
+  margin-bottom: 16px;
+}
+
+.declaration-sub {
+  color: #ccc;
+  font-size: clamp(0.9rem, 2.5vw, 1.05rem);
+  line-height: 1.7;
+  opacity: 0.85;
+}
+
+.declaration-sub strong {
+  color: #FFD700;
+}
+
+/* ── Countdown ───────────────────────────────── */
+.countdown-section {
+  margin-bottom: 36px;
+}
+
+.countdown-label {
+  font-size: 0.78rem;
+  letter-spacing: 2px;
+  color: #FF9800;
+  text-transform: uppercase;
+  opacity: 0.8;
+  margin-bottom: 16px;
+}
+
+.countdown-grid {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.countdown-unit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid #FF980044;
+  border-radius: 16px;
+  padding: 16px 20px;
+  min-width: 80px;
+}
+
+.countdown-num {
+  font-size: clamp(2rem, 7vw, 3rem);
+  font-weight: 900;
+  color: #FFD700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.countdown-tag {
+  font-size: 0.65rem;
+  color: #aaa;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-top: 6px;
+}
+
+.countdown-sep {
+  font-size: clamp(2rem, 7vw, 3rem);
+  font-weight: 900;
+  color: #FF9800;
+  opacity: 0.7;
+  margin-bottom: 20px;
+}
+
+.declaration-arrived {
+  font-size: clamp(1.2rem, 4vw, 1.6rem);
+  font-weight: 800;
+  color: #FFD700;
+  letter-spacing: 1px;
+  margin-bottom: 36px;
+  animation: pulse 1.5s ease-in-out infinite;
+}

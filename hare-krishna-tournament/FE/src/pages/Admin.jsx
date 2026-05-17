@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import axiosClient from '../api/axiosClient'
 
 const CONTESTANTS = ['Gopala Das', 'Mohona Das', 'Krishna Das', 'Hari Das', 'Ramu Das']
 
@@ -13,13 +14,16 @@ export default function Admin() {
 
   // load current scores on mount
   useEffect(() => {
-    fetch('/api/scores')
-      .then(r => r.json())
-      .then(data => {
+    const loadScores = async () => {
+      try {
+        const { data } = await axiosClient.get('/scores')
         setCurrent(data)
         setNaamCounts(Object.fromEntries(data.map(c => [c.name, c.todayNaam ?? 0])))
-      })
-      .catch(() => {})
+      } catch {
+        // silent fail
+      }
+    }
+    loadScores()
   }, [])
 
   const handleChange = (name, value) => {
@@ -34,12 +38,7 @@ export default function Admin() {
         name,
         todayNaam: parseInt(naamCounts[name]) || 0,
       }))
-      const res = await fetch('/api/scores', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updates),
-      })
-      const data = await res.json()
+      const { data } = await axiosClient.post('/scores', updates)
       setCurrent(data)
       setStatus('success')
       setTimeout(() => setStatus(null), 3000)

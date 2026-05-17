@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import axiosClient from '../api/axiosClient'
 
 const winners = [
   { rank: '1st', emoji: '🥇', color: '#FFD700', glow: '#FFD70088', label: 'Champion',      prize: 400 },
@@ -36,11 +37,13 @@ export default function Home() {
   const [contestants, setContestants] = useState([])
 
   useEffect(() => {
-    const fetchScores = () => {
-      fetch('/api/scores')
-        .then(r => r.json())
-        .then(data => setContestants(data))
-        .catch(() => {})
+    const fetchScores = async () => {
+      try {
+        const { data } = await axiosClient.get('/scores')
+        setContestants(data)
+      } catch {
+        // silent — keeps last known scores on screen
+      }
     }
     fetchScores()
     const interval = setInterval(fetchScores, 5000)
