@@ -40,11 +40,11 @@ export default async function handler(req, res) {
 
     // PATCH — update winners / prizePool for an existing week
     if (req.method === 'PATCH') {
-      const { id, winners, prizePool } = req.body;
+      const { id, winners, prizePool, resultDeclared } = req.body;
 
       if (!id) return res.status(400).json({ error: 'id is required' });
 
-      const updated = await updateKeliKunj(id, { winners, prizePool });
+      const updated = await updateKeliKunj(id, { winners, prizePool, resultDeclared });
       if (!updated) return res.status(404).json({ error: 'KeliKunj week not found' });
 
       return res.json(updated);

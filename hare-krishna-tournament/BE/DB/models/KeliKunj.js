@@ -19,6 +19,7 @@ const KeliKunjSchema = new mongoose.Schema(
       _1: { type: Number, default: 0, min: 0 },
       _2: { type: Number, default: 0, min: 0 },
     },
+    resultDeclared: { type: Boolean, default: false },
   },
   {
     collection: 'keliKunj',

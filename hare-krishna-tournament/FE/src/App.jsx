@@ -1,8 +1,9 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
-import Home         from './pages/Home'
-import Announcement from './pages/Announcement'
-import Declaration  from './pages/Declaration'
-import Admin        from './pages/Admin'
+import Home            from './pages/Home'
+import Announcement    from './pages/Announcement'
+import Declaration     from './pages/Declaration'
+import Admin           from './pages/Admin'
+import KeliKunjResult  from './pages/KeliKunjResult'
 import './App.css'
 
 export default function App() {
@@ -13,6 +14,7 @@ export default function App() {
         <Route path="/announcement" element={<Announcement />} />
         <Route path="/declaration"  element={<Declaration />} />
         <Route path="/admin"        element={<Admin />} />
+        <Route path="/results"      element={<KeliKunjResult />} />
       </Routes>
     </BrowserRouter>
   )

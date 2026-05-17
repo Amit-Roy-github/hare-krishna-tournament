@@ -21,10 +21,11 @@ export async function createKeliKunj({ keliKunjWeek, winners, prizePool }) {
 
 // ── Update ──────────────────────────────────────
 
-export async function updateKeliKunj(id, { winners, prizePool }) {
+export async function updateKeliKunj(id, { winners, prizePool, resultDeclared }) {
   const set = {};
-  if (winners)   set.winners   = winners;
-  if (prizePool) set.prizePool = prizePool;
+  if (winners)                    set.winners         = winners;
+  if (prizePool)                  set.prizePool       = prizePool;
+  if (resultDeclared !== undefined) set.resultDeclared = resultDeclared;
 
   return KeliKunj.findByIdAndUpdate(
     id,

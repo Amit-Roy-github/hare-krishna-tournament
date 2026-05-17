@@ -179,6 +179,9 @@ export default function Home() {
           <button className="nav-btn" onClick={() => navigate('/declaration')}>
             🏆 Winner Declaration
           </button>
+          <button className="nav-btn" onClick={() => navigate('/results')}>
+            🏅 KeliKunj Results
+          </button>
         </div>
 
         <div className="footer-chant">

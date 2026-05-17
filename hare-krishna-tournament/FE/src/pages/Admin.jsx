@@ -414,16 +414,18 @@ function KeliKunjSection({ users, keliKunjList, onRefresh }) {
   const startEdit = (k) => {
     setEditId(k._id)
     setEditForm({
-      winners:   { _1: k.winners?._1?._id || '', _2: k.winners?._2?._id || '', _3: k.winners?._3?._id || '' },
-      prizePool: { _1: k.prizePool?._1 ?? '', _2: k.prizePool?._2 ?? '' },
+      winners:        { _1: k.winners?._1?._id || '', _2: k.winners?._2?._id || '', _3: k.winners?._3?._id || '' },
+      prizePool:      { _1: k.prizePool?._1 ?? '', _2: k.prizePool?._2 ?? '' },
+      resultDeclared: k.resultDeclared ?? false,
     })
   }
 
   const saveEdit = async () => {
     try {
       await updateKeliKunj(editId, {
-        winners:   { _1: editForm.winners._1   || null, _2: editForm.winners._2   || null, _3: editForm.winners._3   || null },
-        prizePool: { _1: Number(editForm.prizePool._1) || 0, _2: Number(editForm.prizePool._2) || 0 },
+        winners:        { _1: editForm.winners._1   || null, _2: editForm.winners._2   || null, _3: editForm.winners._3   || null },
+        prizePool:      { _1: Number(editForm.prizePool._1) || 0, _2: Number(editForm.prizePool._2) || 0 },
+        resultDeclared: editForm.resultDeclared,
       })
       setEditId(null)
       onRefresh()
@@ -504,6 +506,7 @@ function KeliKunjSection({ users, keliKunjList, onRefresh }) {
             <span>🥉 3rd</span>
             <span>Prize 1st</span>
             <span>Prize 2nd</span>
+            <span>Declared</span>
             <span>Edit</span>
           </div>
 
@@ -519,6 +522,14 @@ function KeliKunjSection({ users, keliKunjList, onRefresh }) {
                     value={editForm.prizePool._1} onChange={e => setEditPrize('_1', e.target.value)} />
                   <input className="admin-input" type="number" min="0"
                     value={editForm.prizePool._2} onChange={e => setEditPrize('_2', e.target.value)} />
+                  {/* resultDeclared toggle */}
+                  <Switch.Root
+                    className={`switch-root ${editForm.resultDeclared ? 'switch-root--on' : 'switch-root--off'}`}
+                    checked={editForm.resultDeclared}
+                    onCheckedChange={v => setEditForm(p => ({ ...p, resultDeclared: v }))}
+                  >
+                    <Switch.Thumb className="switch-thumb" />
+                  </Switch.Root>
                   <div className="kl-actions">
                     <button className="kl-btn kl-btn--save"   onClick={saveEdit}><Check size={15}/></button>
                     <button className="kl-btn kl-btn--cancel" onClick={() => setEditId(null)}><X size={15}/></button>
@@ -532,6 +543,9 @@ function KeliKunjSection({ users, keliKunjList, onRefresh }) {
                   <span className="kl-meta">{k.winners?._3?.bhaktName || '—'}</span>
                   <span className="kl-meta">₹{k.prizePool?._1 ?? 0}</span>
                   <span className="kl-meta">₹{k.prizePool?._2 ?? 0}</span>
+                  <span className={`kk-declared-badge ${k.resultDeclared ? 'kk-declared--yes' : 'kk-declared--no'}`}>
+                    {k.resultDeclared ? '✅ Yes' : '⏳ No'}
+                  </span>
                   <button className="kl-btn kl-btn--edit" onClick={() => startEdit(k)}><Pencil size={15}/></button>
                 </>
               )}
