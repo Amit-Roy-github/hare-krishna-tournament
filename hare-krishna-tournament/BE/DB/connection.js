@@ -1,11 +1,7 @@
 import mongoose from 'mongoose';
 
-const MONGODB_URI = process.env.MONGODB_URI;
+const MONGODB_URI = 'mongodb+srv://kishor:hareKrishna@cluster0.d8sjq72.mongodb.net/?appName=Cluster0';
 const DB_NAME     = 'shriKrishna';
-
-if (!MONGODB_URI) {
-  throw new Error('Please add MONGODB_URI to environment variables');
-}
 
 // Cache connection across warm serverless invocations
 let cached = global._mongooseCache;

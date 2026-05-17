@@ -140,7 +140,7 @@ export default function Home() {
                   const naamScore = Math.floor((c.todayNaam || 0) / 1000) * 10
                   return (
                     <tr
-                      key={c.name}
+                      key={c.bhaktName}
                       className={
                         c.rank === 1 ? 'row-gold'
                         : c.rank === 2 ? 'row-silver'
@@ -152,7 +152,7 @@ export default function Home() {
                       <td className="rank-cell">
                         {c.rank === 1 ? '🥇' : c.rank === 2 ? '🥈' : c.rank === 3 ? '🥉' : `#${c.rank}`}
                       </td>
-                      <td className="name-cell">{c.name}</td>
+                      <td className="name-cell">{c.bhaktName}</td>
                       <td className="today-naam-cell">
                         {c.todayNaam > 0 ? c.todayNaam.toLocaleString('en-IN') : '0'}
                       </td>
@@ -172,9 +172,14 @@ export default function Home() {
 
         </div>
 
-        <button className="nav-btn" onClick={() => navigate('/announcement')}>
-          📢 View Tournament Announcement
-        </button>
+        <div className="nav-btn-row">
+          <button className="nav-btn" onClick={() => navigate('/announcement')}>
+            📢 View Tournament Announcement
+          </button>
+          <button className="nav-btn" onClick={() => navigate('/declaration')}>
+            🏆 Winner Declaration
+          </button>
+        </div>
 
         <div className="footer-chant">
           Hare Rama • Hare Rama • Rama Rama • Hare Hare
