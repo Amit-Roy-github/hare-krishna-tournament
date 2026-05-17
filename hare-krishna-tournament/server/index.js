@@ -59,6 +59,16 @@ app.post('/api/scores', (req, res) => {
   res.json(scores.map(c => ({ ...c, score: computeScore(c) })));
 });
 
-app.listen(3001, () => {
-  console.log('Scores server running at http://localhost:3001');
+// ── Serve React build in production ──────────────
+const distPath = path.join(__dirname, '../dist');
+if (fs.existsSync(distPath)) {
+  app.use(express.static(distPath));
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(distPath, 'index.html'));
+  });
+}
+
+const PORT = process.env.PORT || 3001;
+app.listen(PORT, () => {
+  console.log(`Server running at http://localhost:${PORT}`);
 });
