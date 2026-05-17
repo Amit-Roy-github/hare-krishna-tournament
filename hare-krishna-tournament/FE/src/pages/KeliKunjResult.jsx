@@ -133,9 +133,15 @@ export default function KeliKunjResult() {
                 <span key={i} className="burst-dot" style={{ '--i': i }} />
               ))}
               <div className="final-day-badge">
-                <span className="fire">🎉</span>
+                <span className="fire">
+                  🎉
+                  {[...Array(7)].map((_, i) => <span key={i} className="spark" style={{'--si': i}} />)}
+                </span>
                 <span>WINNERS DECLARED</span>
-                <span className="fire">🎉</span>
+                <span className="fire">
+                  🎉
+                  {[...Array(7)].map((_, i) => <span key={i} className="spark" style={{'--si': i}} />)}
+                </span>
               </div>
             </div>
           )}

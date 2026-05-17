@@ -141,11 +141,44 @@
 .fire {
   font-size: 1.6rem;
   display: inline-block;
+  position: relative;
   animation: confettiBurst 0.6s cubic-bezier(0.22, 1, 0.36, 1) both,
              confettiFloat  2.4s ease-in-out infinite 0.6s;
 }
 .fire:last-child {
   animation-delay: 0.15s, 0.75s;
+}
+
+/* upward sparks from each 🎉 */
+.spark {
+  position: absolute;
+  bottom: 90%;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: hsl(calc(var(--si) * 52deg), 100%, 65%);
+  pointer-events: none;
+  animation: sparkUp 1.2s ease-out infinite;
+  animation-delay: calc(var(--si) * 0.18s);
+}
+
+@keyframes sparkUp {
+  0% {
+    transform: translate(-50%, 0) rotate(0deg);
+    opacity: 1;
+    width: 5px; height: 5px;
+  }
+  100% {
+    transform:
+      translate(
+        calc(-50% + (var(--si) - 3) * 14px),
+        -55px
+      )
+      rotate(calc(var(--si) * 40deg));
+    opacity: 0;
+    width: 3px; height: 3px;
+  }
 }
 
 @keyframes confettiBurst {
