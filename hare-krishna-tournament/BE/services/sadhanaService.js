@@ -50,7 +50,7 @@ export async function getTodaySadhanaMap() {
 // Only includes contestants who are active in the current tournament
 
 export async function buildScoresResponse(defaultContestants) {
-  const contestants = await KrishnaDas.find({ includeInPlayground: true }).lean();
+  const contestants = await KrishnaDas.find({ includeInKeliKunj: true }).lean();
   const sadhanaMap  = await getTodaySadhanaMap();
 
   return contestants.map(c => {

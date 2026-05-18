@@ -5,7 +5,7 @@ import KrishnaDas from '../DB/models/KrishnaDas.js';
 export async function findAll() {
   const docs = await KrishnaDas.find().lean();
   // Apply schema defaults that lean() skips for older documents
-  return docs.map(d => ({ includeInPlayground: true, ...d }));
+  return docs.map(d => ({ includeInKeliKunj: true, ...d }));
 }
 
 export async function findByBhaktName(bhaktName) {
@@ -23,7 +23,7 @@ export async function createKrishnaDas({ bhaktName, email, phone, sansarName }) 
 }
 
 export async function updateKrishnaDas(id, fields) {
-  const allowed = ['bhaktName', 'email', 'phone', 'sansarName', 'includeInPlayground'];
+  const allowed = ['bhaktName', 'email', 'phone', 'sansarName', 'includeInKeliKunj'];
   const set = {};
   for (const key of allowed) {
     if (fields[key] !== undefined) set[key] = fields[key];

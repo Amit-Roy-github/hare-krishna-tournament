@@ -6,8 +6,8 @@ const RANK_META = [
   { key: '_1',               rank: '1st', emoji: '🥇', color: '#FFD700', glow: '#FFD70088', label: 'Champion'         },
   { key: '_2',               rank: '2nd', emoji: '🥈', color: '#C0C0C0', glow: '#C0C0C088', label: 'Runner Up'        },
   { key: '_3',               rank: '3rd', emoji: '🥉', color: '#CD7F32', glow: '#CD7F3288', label: '2nd Runner Up'    },
-  { key: 'maxNaamJaap',      rank: '4th', emoji: '🎯', color: '#E91E63', glow: '#E91E6388', label: 'Naam Jaap Hero'   },
-  { key: 'totalMaxNaamJaap', rank: '5th', emoji: '📿', color: '#9C27B0', glow: '#9C27B088', label: 'Naam Jaap Legend' },
+  { key: 'maxNaamJaap',      rank: 'Hero',   emoji: '🎯', color: '#E91E63', glow: '#E91E6388', label: 'Naam Jaap Hero'   },
+  { key: 'totalMaxNaamJaap', rank: 'Legend', emoji: '📿', color: '#9C27B0', glow: '#9C27B088', label: 'Naam Jaap Legend' },
 ]
 
 function WinnerCard({ meta, week, index }) {

@@ -235,7 +235,7 @@ function KrishnaDasList({ users, onRefresh }) {
       sansarName:          u.sansarName || '',
       email:               u.email      || '',
       phone:               u.phone      || '',
-      includeInPlayground: u.includeInPlayground, // exact DB value — no defaulting here
+      includeInKeliKunj: u.includeInKeliKunj, // exact DB value — no defaulting here
     })
   }
 
@@ -254,9 +254,9 @@ function KrishnaDasList({ users, onRefresh }) {
 
   const handleToggle = async (u) => {
     try {
-      await updateKrishnaDas(u._id, { includeInPlayground: !u.includeInPlayground })
+      await updateKrishnaDas(u._id, { includeInKeliKunj: !u.includeInKeliKunj })
       onRefresh()
-      toast.success(`${u.bhaktName} ${!u.includeInPlayground ? 'added to' : 'removed from'} tournament`)
+      toast.success(`${u.bhaktName} ${!u.includeInKeliKunj ? 'added to' : 'removed from'} tournament`)
     } catch {
       toast.error('Failed to update')
     }
@@ -315,8 +315,8 @@ function KrishnaDasList({ users, onRefresh }) {
                   />
 
                   <PlaygroundSwitch
-                    checked={editForm.includeInPlayground}
-                    onCheckedChange={val => setEditForm(p => ({ ...p, includeInPlayground: val }))}
+                    checked={editForm.includeInKeliKunj}
+                    onCheckedChange={val => setEditForm(p => ({ ...p, includeInKeliKunj: val }))}
                   />
 
                   <div className="kl-actions">
@@ -347,7 +347,7 @@ function KrishnaDasList({ users, onRefresh }) {
                   <span className="kl-meta">{u.phone      || '—'}</span>
 
                   <PlaygroundSwitch
-                    checked={u.includeInPlayground}
+                    checked={u.includeInKeliKunj}
                     onCheckedChange={() => handleToggle(u)}
                   />
 

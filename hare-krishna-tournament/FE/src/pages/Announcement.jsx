@@ -1,24 +1,35 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import axiosClient from '../api/axiosClient'
 
-const prizes = [
-  { rank: '1st', amount: 400, emoji: '🥇', color: '#FFD700', glow: '#FFD70088', label: 'Champion' },
-  { rank: '2nd', amount: 100, emoji: '🥈', color: '#C0C0C0', glow: '#C0C0C088', label: 'Runner Up' },
-  { rank: '3rd', amount: 50,  emoji: '🥉', color: '#CD7F32', glow: '#CD7F3288', label: '2nd Runner Up' },
+const PRIZE_META = [
+  { key: '_1',               emoji: '🥇', color: '#FFD700', glow: '#FFD70088', fallback: 'Champion'         },
+  { key: '_2',               emoji: '🥈', color: '#C0C0C0', glow: '#C0C0C088', fallback: 'Runner Up'        },
+  { key: '_3',               emoji: '🥉', color: '#CD7F32', glow: '#CD7F3288', fallback: '2nd Runner Up'    },
+  { key: 'maxNaamJaap',      emoji: '🎯', color: '#E91E63', glow: '#E91E6388', fallback: 'Naam Jaap Hero'   },
+  { key: 'totalMaxNaamJaap', emoji: '📿', color: '#9C27B0', glow: '#9C27B088', fallback: 'Naam Jaap Legend' },
 ]
 
-function PrizeCard({ prize, index }) {
+const getPoolVal = (pp, key, field) => {
+  const entry = pp?.[key]
+  if (entry && typeof entry === 'object') return entry[field] ?? (field === 'prize' ? 0 : '')
+  return field === 'prize' ? (entry ?? 0) : ''
+}
+
+function PrizeCard({ meta, week }) {
+  const title  = getPoolVal(week?.prizePool, meta.key, 'title') || meta.fallback
+  const amount = getPoolVal(week?.prizePool, meta.key, 'prize')
+
   return (
     <div
       className="prize-card prize-card--visible"
-      style={{ '--glow': prize.glow, '--border': prize.color }}
+      style={{ '--glow': meta.glow, '--border': meta.color }}
     >
-      <div className="prize-medal">{prize.emoji}</div>
-      <div className="prize-rank" style={{ color: prize.color }}>{prize.rank}</div>
-      <div className="prize-label">{prize.label}</div>
+      <div className="prize-medal">{meta.emoji}</div>
+      <div className="prize-rank" style={{ color: meta.color }}>{title}</div>
       <div className="prize-amount">
         <span className="rupee">₹</span>
-        <span className="amount">{prize.amount}</span>
+        <span className="amount">{amount}</span>
       </div>
     </div>
   )
@@ -26,6 +37,15 @@ function PrizeCard({ prize, index }) {
 
 export default function Announcement() {
   const navigate = useNavigate()
+  const [latestWeek, setLatestWeek] = useState(null)
+
+  useEffect(() => {
+    axiosClient.get('/keliKunj').then(({ data }) => {
+      // pick the most recent week (sorted desc already)
+      if (data.length > 0) setLatestWeek(data[0])
+    }).catch(() => {})
+  }, [])
+
   const [particles] = useState(() =>
     Array.from({ length: 30 }, (_, i) => ({
       id: i,
@@ -62,7 +82,7 @@ export default function Announcement() {
 
           <div className="final-day-badge">
             <span className="fire">🔥</span>
-            <span>FINALE</span>
+            <span>{latestWeek ? `Week ${latestWeek.keliKunjWeek}` : 'KeliKunj'}</span>
             <span className="fire">🔥</span>
           </div>
 
@@ -77,8 +97,8 @@ export default function Announcement() {
             <span className="trophy">🏆</span> Prize Pool <span className="trophy">🏆</span>
           </h2>
           <div className="prize-grid">
-            {prizes.map((prize, i) => (
-              <PrizeCard key={prize.rank} prize={prize} index={i} />
+            {PRIZE_META.map(meta => (
+              <PrizeCard key={meta.key} meta={meta} week={latestWeek} />
             ))}
           </div>
         </div>

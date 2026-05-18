@@ -6,7 +6,7 @@ const KrishnaDasSchema = new mongoose.Schema(
     email:       { type: String, trim: true, lowercase: true },
     phone:       { type: String, trim: true },
     sansarName:  { type: String, trim: true },
-    includeInPlayground: { type: Boolean, default: true },
+    includeInKeliKunj: { type: Boolean, default: true },
   },
   {
     collection:  'krishnaDas',
