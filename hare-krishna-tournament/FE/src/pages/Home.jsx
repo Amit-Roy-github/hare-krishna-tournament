@@ -3,9 +3,11 @@ import { useNavigate } from 'react-router-dom'
 import axiosClient from '../api/axiosClient'
 
 const RANK_META = [
-  { key: '_1', rank: '1st', emoji: '🥇', color: '#FFD700', glow: '#FFD70088', label: 'Champion'      },
-  { key: '_2', rank: '2nd', emoji: '🥈', color: '#C0C0C0', glow: '#C0C0C088', label: 'Runner Up'     },
-  { key: '_3', rank: '3rd', emoji: '🥉', color: '#CD7F32', glow: '#CD7F3288', label: '2nd Runner Up' },
+  { key: '_1',               rank: '1st', emoji: '🥇', color: '#FFD700', glow: '#FFD70088', label: 'Champion'         },
+  { key: '_2',               rank: '2nd', emoji: '🥈', color: '#C0C0C0', glow: '#C0C0C088', label: 'Runner Up'        },
+  { key: '_3',               rank: '3rd', emoji: '🥉', color: '#CD7F32', glow: '#CD7F3288', label: '2nd Runner Up'    },
+  { key: 'maxNaamJaap',      rank: '4th', emoji: '🎯', color: '#E91E63', glow: '#E91E6388', label: 'Naam Jaap Hero'   },
+  { key: 'totalMaxNaamJaap', rank: '5th', emoji: '📿', color: '#9C27B0', glow: '#9C27B088', label: 'Naam Jaap Legend' },
 ]
 
 function WinnerCard({ meta, week, index }) {
@@ -17,7 +19,7 @@ function WinnerCard({ meta, week, index }) {
 
   const declared  = week?.resultDeclared
   const name      = week?.winners?.[meta.key]?.bhaktName
-  const prize     = week?.prizePool?.[meta.key] ?? 0
+  const prize     = week?.prizePool?.[meta.key]?.prize ?? 0
 
   return (
     <div
@@ -30,7 +32,7 @@ function WinnerCard({ meta, week, index }) {
         ? <div className="winner-name">{name}</div>
         : <div className="winner-tbd">To be announced</div>
       }
-      <div className="winner-label">{meta.label}</div>
+      <div className="winner-label">{week?.prizePool?.[meta.key]?.title || meta.label}</div>
       {prize > 0 && (
         <div className="winner-prize">
           <span className="rupee">₹</span>

@@ -32,9 +32,11 @@ function Confetti({ count = 60 }) {
 
 // ── Single week card ─────────────────────────────
 const RANKS = [
-  { key: '_1', emoji: '🥇', label: '1st Place',     color: '#FFD700', glow: '#FFD70055' },
-  { key: '_2', emoji: '🥈', label: '2nd Place',     color: '#C0C0C0', glow: '#C0C0C055' },
-  { key: '_3', emoji: '🥉', label: '3rd Place',     color: '#CD7F32', glow: '#CD7F3255' },
+  { key: '_1',               emoji: '🥇', fallback: '1st Place',      color: '#FFD700', glow: '#FFD70055' },
+  { key: '_2',               emoji: '🥈', fallback: '2nd Place',      color: '#C0C0C0', glow: '#C0C0C055' },
+  { key: '_3',               emoji: '🥉', fallback: '3rd Place',      color: '#CD7F32', glow: '#CD7F3255' },
+  { key: 'maxNaamJaap',      emoji: '🎯', fallback: 'Naam Jaap Hero', color: '#E91E63', glow: '#E91E6355' },
+  { key: 'totalMaxNaamJaap', emoji: '📿', fallback: 'Naam Jaap Legend',color: '#9C27B0', glow: '#9C27B055' },
 ]
 
 function WeekCard({ week, index }) {
@@ -69,7 +71,7 @@ function WeekCard({ week, index }) {
               style={{ '--slot-color': r.color, '--slot-glow': r.glow }}
             >
               <div className="kk-winner-medal">{r.emoji}</div>
-              <div className="kk-winner-rank" style={{ color: r.color }}>{r.label}</div>
+              <div className="kk-winner-rank" style={{ color: r.color }}>{week.prizePool?.[r.key]?.title || r.fallback}</div>
               {declared ? (
                 <div className="kk-winner-name">{bhaktName}</div>
               ) : (
@@ -82,7 +84,7 @@ function WeekCard({ week, index }) {
               {declared && (
                 <div className="kk-winner-prize">
                   <span className="kk-prize-rupee">₹</span>
-                  <span className="kk-prize-amount">{week.prizePool?.[r.key] ?? 0}</span>
+                  <span className="kk-prize-amount">{week.prizePool?.[r.key]?.prize ?? 0}</span>
                 </div>
               )}
             </div>

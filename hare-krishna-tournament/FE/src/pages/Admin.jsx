@@ -374,10 +374,43 @@ function KrishnaDasList({ users, onRefresh }) {
 }
 
 // ── KeliKunj Section ─────────────────────────────
+
+const PLACE_CONFIG = [
+  { key: '_1',               emoji: '🥇', label: '1st Place',      defaultTitle: 'Champion'         },
+  { key: '_2',               emoji: '🥈', label: '2nd Place',      defaultTitle: 'Runner Up'        },
+  { key: '_3',               emoji: '🥉', label: '3rd Place',      defaultTitle: '2nd Runner Up'    },
+  { key: 'maxNaamJaap',      emoji: '🎯', label: 'Max Naam Jaap',  defaultTitle: 'Naam Jaap Hero'   },
+  { key: 'totalMaxNaamJaap', emoji: '📿', label: 'Total Max Naam', defaultTitle: 'Naam Jaap Legend' },
+]
+
+const PRIZE_DEFAULTS = {
+  _1: 'Champion', _2: 'Runner Up', _3: '2nd Runner Up',
+  maxNaamJaap: 'Naam Jaap Hero', totalMaxNaamJaap: 'Naam Jaap Legend',
+}
+
+const EMPTY_POOL = Object.fromEntries(
+  Object.keys(PRIZE_DEFAULTS).map(k => [k, { prize: '', title: '' }])
+)
+
 const EMPTY_KELIKUNJ = {
   keliKunjWeek: '',
-  winners:   { _1: '', _2: '', _3: '' },
-  prizePool: { _1: '', _2: '', _3: '' },
+  winners:   { _1: '', _2: '', _3: '', maxNaamJaap: '', totalMaxNaamJaap: '' },
+  prizePool: EMPTY_POOL,
+}
+
+const buildPrizePool = (pp) =>
+  Object.fromEntries(
+    Object.keys(PRIZE_DEFAULTS).map(k => [k, {
+      prize: Number(pp[k]?.prize) || 0,
+      title: pp[k]?.title || PRIZE_DEFAULTS[k],
+    }])
+  )
+
+// helper to read prize/title from old (number) or new (object) prizePool format
+const getPoolVal = (pp, key, field) => {
+  const entry = pp?.[key]
+  if (entry && typeof entry === 'object') return entry[field] ?? (field === 'prize' ? 0 : '')
+  return field === 'prize' ? (entry ?? 0) : ''
 }
 
 function KeliKunjSection({ users, keliKunjList, onRefresh }) {
@@ -386,11 +419,17 @@ function KeliKunjSection({ users, keliKunjList, onRefresh }) {
   const [editForm,setEditForm]= useState({})
   const [loading, setLoading] = useState(false)
 
-  const setWinner   = (key, val) => setForm(p => ({ ...p, winners:   { ...p.winners,   [key]: val } }))
-  const setPrize    = (key, val) => setForm(p => ({ ...p, prizePool: { ...p.prizePool, [key]: val } }))
+  const setWinner = (key, val) => setForm(p => ({ ...p, winners: { ...p.winners, [key]: val } }))
+  const setPrize  = (key, val) => setForm(p => ({ ...p, prizePool: { ...p.prizePool, [key]: { ...p.prizePool[key], prize: val } } }))
+  const setTitle  = (key, val) => setForm(p => ({ ...p, prizePool: { ...p.prizePool, [key]: { ...p.prizePool[key], title: val } } }))
 
-  const setEditWinner = (key, val) => setEditForm(p => ({ ...p, winners:   { ...p.winners,   [key]: val } }))
-  const setEditPrize  = (key, val) => setEditForm(p => ({ ...p, prizePool: { ...p.prizePool, [key]: val } }))
+  const setEditWinner = (key, val) => setEditForm(p => ({ ...p, winners: { ...p.winners, [key]: val } }))
+  const setEditPrize  = (key, val) => setEditForm(p => ({ ...p, prizePool: { ...p.prizePool, [key]: { ...p.prizePool[key], prize: val } } }))
+  const setEditTitle  = (key, val) => setEditForm(p => ({ ...p, prizePool: { ...p.prizePool, [key]: { ...p.prizePool[key], title: val } } }))
+
+  const buildWinners = (w) => Object.fromEntries(
+    Object.keys(PRIZE_DEFAULTS).map(k => [k, w[k] || null])
+  )
 
   const handleCreate = async (e) => {
     e.preventDefault()
@@ -398,8 +437,8 @@ function KeliKunjSection({ users, keliKunjList, onRefresh }) {
     try {
       await createKeliKunj({
         keliKunjWeek: Number(form.keliKunjWeek),
-        winners:   { _1: form.winners._1   || null, _2: form.winners._2   || null, _3: form.winners._3   || null },
-        prizePool: { _1: Number(form.prizePool._1) || 0, _2: Number(form.prizePool._2) || 0, _3: Number(form.prizePool._3) || 0 },
+        winners:   buildWinners(form.winners),
+        prizePool: buildPrizePool(form.prizePool),
       })
       setForm(EMPTY_KELIKUNJ)
       onRefresh()
@@ -414,8 +453,15 @@ function KeliKunjSection({ users, keliKunjList, onRefresh }) {
   const startEdit = (k) => {
     setEditId(k._id)
     setEditForm({
-      winners:        { _1: k.winners?._1?._id || '', _2: k.winners?._2?._id || '', _3: k.winners?._3?._id || '' },
-      prizePool:      { _1: k.prizePool?._1 ?? '', _2: k.prizePool?._2 ?? '', _3: k.prizePool?._3 ?? '' },
+      winners: Object.fromEntries(
+        Object.keys(PRIZE_DEFAULTS).map(key => [key, k.winners?.[key]?._id || ''])
+      ),
+      prizePool: Object.fromEntries(
+        Object.keys(PRIZE_DEFAULTS).map(key => [key, {
+          prize: getPoolVal(k.prizePool, key, 'prize'),
+          title: getPoolVal(k.prizePool, key, 'title'),
+        }])
+      ),
       resultDeclared: k.resultDeclared ?? false,
     })
   }
@@ -423,8 +469,8 @@ function KeliKunjSection({ users, keliKunjList, onRefresh }) {
   const saveEdit = async () => {
     try {
       await updateKeliKunj(editId, {
-        winners:        { _1: editForm.winners._1   || null, _2: editForm.winners._2   || null, _3: editForm.winners._3   || null },
-        prizePool:      { _1: Number(editForm.prizePool._1) || 0, _2: Number(editForm.prizePool._2) || 0, _3: Number(editForm.prizePool._3) || 0 },
+        winners:        buildWinners(editForm.winners),
+        prizePool:      buildPrizePool(editForm.prizePool),
         resultDeclared: editForm.resultDeclared,
       })
       setEditId(null)
@@ -438,8 +484,8 @@ function KeliKunjSection({ users, keliKunjList, onRefresh }) {
   const toggleDeclared = async (k) => {
     try {
       await updateKeliKunj(k._id, {
-        winners:        { _1: k.winners?._1?._id || null, _2: k.winners?._2?._id || null, _3: k.winners?._3?._id || null },
-        prizePool:      { _1: k.prizePool?._1 || 0, _2: k.prizePool?._2 || 0, _3: k.prizePool?._3 || 0 },
+        winners:        Object.fromEntries(Object.keys(PRIZE_DEFAULTS).map(key => [key, k.winners?.[key]?._id || null])),
+        prizePool:      k.prizePool,
         resultDeclared: !k.resultDeclared,
       })
       onRefresh()
@@ -462,11 +508,9 @@ function KeliKunjSection({ users, keliKunjList, onRefresh }) {
     <div className="admin-section">
       <h2 className="admin-section-title">🏆 KeliKunj — Winners</h2>
 
-      {/* ── Create form (card style) ── */}
+      {/* ── Create form ── */}
       <form onSubmit={handleCreate}>
         <div className="kk-card kk-card--create">
-
-          {/* top row: week no */}
           <div className="kk-card-top">
             <div className="kk-inline-field">
               <label className="admin-field-label">Week No. *</label>
@@ -483,44 +527,29 @@ function KeliKunjSection({ users, keliKunjList, onRefresh }) {
             </button>
           </div>
 
-          {/* place rows */}
-          <div className="kk-place-row">
-            <span className="kk-place-label">🥇 1st Place</span>
-            <WinnerSelect value={form.winners._1} onChange={v => setWinner('_1', v)} />
-            <span className="kk-place-label kk-prize-label">Prize 1st (₹)</span>
-            <input className="admin-input kk-prize-input" type="number" min="0" placeholder="400"
-              value={form.prizePool._1} onChange={e => setPrize('_1', e.target.value)} />
-          </div>
-
-          <div className="kk-place-row">
-            <span className="kk-place-label">🥈 2nd Place</span>
-            <WinnerSelect value={form.winners._2} onChange={v => setWinner('_2', v)} />
-            <span className="kk-place-label kk-prize-label">Prize 2nd (₹)</span>
-            <input className="admin-input kk-prize-input" type="number" min="0" placeholder="100"
-              value={form.prizePool._2} onChange={e => setPrize('_2', e.target.value)} />
-          </div>
-
-          <div className="kk-place-row">
-            <span className="kk-place-label">🥉 3rd Place</span>
-            <WinnerSelect value={form.winners._3} onChange={v => setWinner('_3', v)} />
-            <span className="kk-place-label kk-prize-label">Prize 3rd (₹)</span>
-            <input className="admin-input kk-prize-input" type="number" min="0" placeholder="50"
-              value={form.prizePool._3} onChange={e => setPrize('_3', e.target.value)} />
-          </div>
-
+          {PLACE_CONFIG.map(({ key, emoji, label, defaultTitle }) => (
+            <div key={key} className="kk-place-row">
+              <span className="kk-place-label">{emoji} {label}</span>
+              <WinnerSelect value={form.winners[key]} onChange={v => setWinner(key, v)} />
+              <span className="kk-place-label kk-title-label">Title</span>
+              <input className="admin-input" type="text" placeholder={defaultTitle}
+                value={form.prizePool[key].title} onChange={e => setTitle(key, e.target.value)} />
+              <span className="kk-place-label kk-prize-label">Prize (₹)</span>
+              <input className="admin-input" type="number" min="0"
+                value={form.prizePool[key].prize} onChange={e => setPrize(key, e.target.value)} />
+            </div>
+          ))}
         </div>
       </form>
 
-      {/* ── List (card per week) ── */}
+      {/* ── List ── */}
       {keliKunjList.length > 0 && (
         <div className="kk-cards-list">
           {keliKunjList.map(k => (
             <div key={k._id} className={`kk-card ${editId === k._id ? 'kk-card--editing' : ''}`}>
 
-              {/* card header: week title + declared + actions */}
               <div className="kk-card-top">
                 <span className="kk-week-title-label">Week {k.keliKunjWeek}</span>
-
                 <div className="kk-card-right">
                   {editId === k._id ? (
                     <>
@@ -551,48 +580,27 @@ function KeliKunjSection({ users, keliKunjList, onRefresh }) {
                 </div>
               </div>
 
-              {/* place rows */}
-              <div className="kk-place-row">
-                <span className="kk-place-label">🥇 1st Place</span>
-                {editId === k._id
-                  ? <WinnerSelect value={editForm.winners._1} onChange={v => setEditWinner('_1', v)} />
-                  : <span className="kl-meta">{k.winners?._1?.bhaktName || '—'}</span>
-                }
-                <span className="kk-place-label kk-prize-label">Prize 1st (₹)</span>
-                {editId === k._id
-                  ? <input className="admin-input kk-prize-input" type="number" min="0"
-                      value={editForm.prizePool._1} onChange={e => setEditPrize('_1', e.target.value)} />
-                  : <span className="kl-meta">₹{k.prizePool?._1 ?? 0}</span>
-                }
-              </div>
-
-              <div className="kk-place-row">
-                <span className="kk-place-label">🥈 2nd Place</span>
-                {editId === k._id
-                  ? <WinnerSelect value={editForm.winners._2} onChange={v => setEditWinner('_2', v)} />
-                  : <span className="kl-meta">{k.winners?._2?.bhaktName || '—'}</span>
-                }
-                <span className="kk-place-label kk-prize-label">Prize 2nd (₹)</span>
-                {editId === k._id
-                  ? <input className="admin-input kk-prize-input" type="number" min="0"
-                      value={editForm.prizePool._2} onChange={e => setEditPrize('_2', e.target.value)} />
-                  : <span className="kl-meta">₹{k.prizePool?._2 ?? 0}</span>
-                }
-              </div>
-
-              <div className="kk-place-row">
-                <span className="kk-place-label">🥉 3rd Place</span>
-                {editId === k._id
-                  ? <WinnerSelect value={editForm.winners._3} onChange={v => setEditWinner('_3', v)} />
-                  : <span className="kl-meta">{k.winners?._3?.bhaktName || '—'}</span>
-                }
-                <span className="kk-place-label kk-prize-label">Prize 3rd (₹)</span>
-                {editId === k._id
-                  ? <input className="admin-input kk-prize-input" type="number" min="0"
-                      value={editForm.prizePool._3} onChange={e => setEditPrize('_3', e.target.value)} />
-                  : <span className="kl-meta">₹{k.prizePool?._3 ?? 0}</span>
-                }
-              </div>
+              {PLACE_CONFIG.map(({ key, emoji, label }) => (
+                <div key={key} className="kk-place-row">
+                  <span className="kk-place-label">{emoji} {label}</span>
+                  {editId === k._id
+                    ? <WinnerSelect value={editForm.winners[key]} onChange={v => setEditWinner(key, v)} />
+                    : <span className="kl-meta">{k.winners?.[key]?.bhaktName || '—'}</span>
+                  }
+                  <span className="kk-place-label kk-title-label">Title</span>
+                  {editId === k._id
+                    ? <input className="admin-input" type="text"
+                        value={editForm.prizePool[key]?.title || ''} onChange={e => setEditTitle(key, e.target.value)} />
+                    : <span className="kl-meta">{getPoolVal(k.prizePool, key, 'title') || '—'}</span>
+                  }
+                  <span className="kk-place-label kk-prize-label">Prize (₹)</span>
+                  {editId === k._id
+                    ? <input className="admin-input" type="number" min="0"
+                        value={editForm.prizePool[key]?.prize ?? ''} onChange={e => setEditPrize(key, e.target.value)} />
+                    : <span className="kl-meta">₹{getPoolVal(k.prizePool, key, 'prize')}</span>
+                  }
+                </div>
+              ))}
 
             </div>
           ))}

@@ -5,7 +5,7 @@ import '../DB/models/KrishnaDas.js'; // ensure KrishnaDas is registered for popu
 
 export async function findAll() {
   return KeliKunj.find()
-    .populate('winners._1 winners._2 winners._3', 'bhaktName')
+    .populate('winners._1 winners._2 winners._3 winners.maxNaamJaap winners.totalMaxNaamJaap', 'bhaktName')
     .sort({ keliKunjWeek: -1 })
     .lean();
 }
