@@ -10,11 +10,6 @@ function getDayStart(date = new Date()) {
   return d;
 }
 
-function computeScore(defaultScore, sadhana) {
-  const naamScore = Math.floor((sadhana?.naamJaapCount || 0) / 1000) * 10;
-  return defaultScore + naamScore;
-}
-
 // ── Upsert today's sadhana for one krishnadas ───
 // If a record exists for today → update it
 // If not → create a new one (one record per person per day)
@@ -22,7 +17,7 @@ function computeScore(defaultScore, sadhana) {
 export async function upsertTodaySadhana(krishnaDasId, fields) {
   const today = getDayStart();
 
-  const allowed = ['naamJaapCount', 'niyam1Point', 'niyam2Point', 'niyam3Point'];
+  const allowed = ['naamJaapCount', 'niyam1', 'niyam2', 'niyam3'];
   const set = {};
   for (const key of allowed) {
     if (fields[key] !== undefined) set[key] = fields[key];
@@ -49,23 +44,127 @@ export async function getTodaySadhanaMap() {
 // ── Build leaderboard response ──────────────────
 // Only includes contestants who are active in the current tournament
 
-export async function buildScoresResponse(defaultContestants) {
-  const contestants = await KrishnaDas.find({ includeInKeliKunj: true }).lean();
+export async function buildScoresResponse() {
+  const contestants = await KrishnaDas.find({ includeInKeliKunj: { $ne: false } }).lean();
   const sadhanaMap  = await getTodaySadhanaMap();
 
   return contestants.map(c => {
-    const sadhana      = sadhanaMap[c._id.toString()] || {};
-    const defaultScore = defaultContestants.find(d => d.bhaktName === c.bhaktName)?.defaultScore || 0;
+    const sadhana  = sadhanaMap[c._id.toString()] || {};
+    const naamPts  = Math.floor((sadhana.naamJaapCount || 0) / 1000) * 10;
+    const score    = (sadhana.niyam1?.point || 0) + (sadhana.niyam2?.point || 0)
+                   + (sadhana.niyam3?.point || 0) + naamPts;
 
     return {
-      bhaktName:     c.bhaktName,
-      todayNaam:     sadhana.naamJaapCount || 0,
-      niyam1Point:   sadhana.niyam1Point   || 0,
-      niyam2Point:   sadhana.niyam2Point   || 0,
-      niyam3Point:   sadhana.niyam3Point   || 0,
-      score:         computeScore(defaultScore, sadhana),
+      bhaktName:    c.bhaktName,
+      todayNaam:    sadhana.naamJaapCount      || 0,
+      niyam1Point:  sadhana.niyam1?.point      || 0,
+      niyam1DoneAt: sadhana.niyam1?.doneAt     || null,
+      niyam2Point:  sadhana.niyam2?.point      || 0,
+      niyam2DoneAt: sadhana.niyam2?.doneAt     || null,
+      niyam3Point:  sadhana.niyam3?.point      || 0,
+      niyam3DoneAt: sadhana.niyam3?.doneAt     || null,
+      score,
     };
   });
+}
+
+// ── Build weekly stats response ─────────────────
+// Days = Monday of current week → today
+// Returns { days, overall, dates, heroName, legendName }
+
+function getWeekMonday() {
+  const now = new Date();
+  now.setUTCHours(0, 0, 0, 0);
+  const day  = now.getUTCDay();                   // 0=Sun … 6=Sat
+  const diff = day === 0 ? -6 : 1 - day;          // offset to Monday
+  const mon  = new Date(now);
+  mon.setUTCDate(now.getUTCDate() + diff);
+  return mon;
+}
+
+const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+export async function buildStatsResponse() {
+  const contestants = await KrishnaDas.find({ includeInKeliKunj: { $ne: false } }).lean();
+  const monday      = getWeekMonday();
+  const today       = getDayStart();
+
+  // All sadhana records for this week
+  const sadhanas = await Sadhana.find({ date: { $gte: monday, $lte: today } }).lean();
+
+  // krishnadasId → dateKey → sadhana
+  const sadhanaMap = {};
+  for (const s of sadhanas) {
+    const id      = s.krishnadasId.toString();
+    const dateKey = s.date.toISOString().split('T')[0];
+    if (!sadhanaMap[id]) sadhanaMap[id] = {};
+    sadhanaMap[id][dateKey] = s;
+  }
+
+  // List of date strings Mon … today
+  const dates = [];
+  const cursor = new Date(monday);
+  while (cursor <= today) {
+    dates.push(new Date(cursor));
+    cursor.setUTCDate(cursor.getUTCDate() + 1);
+  }
+  const dateKeys = dates.map(d => d.toISOString().split('T')[0]);
+
+  // Day-wise breakdown
+  const days = dates.map(date => {
+    const dateKey = date.toISOString().split('T')[0];
+    const dayName = DAY_NAMES[date.getUTCDay()];
+
+    const records = contestants.map(c => {
+      const s          = sadhanaMap[c._id.toString()]?.[dateKey] || {};
+      const naamPoints = Math.floor((s.naamJaapCount || 0) / 1000) * 10;
+      const dayTotal   = (s.niyam1?.point || 0) + (s.niyam2?.point || 0)
+                       + (s.niyam3?.point || 0) + naamPoints;
+      return {
+        bhaktName:    c.bhaktName,
+        niyam1Point:  s.niyam1?.point  || 0,
+        niyam1DoneAt: s.niyam1?.doneAt || null,
+        niyam2Point:  s.niyam2?.point  || 0,
+        niyam2DoneAt: s.niyam2?.doneAt || null,
+        niyam3Point:  s.niyam3?.point  || 0,
+        niyam3DoneAt: s.niyam3?.doneAt || null,
+        naamPoints,
+        naamCount:    s.naamJaapCount  || 0,
+        dayTotal,
+      };
+    }).sort((a, b) => b.dayTotal - a.dayTotal);
+
+    return { date: dateKey, dayName, records };
+  });
+
+  // Overall breakdown
+  const overall = contestants.map(c => {
+    const id = c._id.toString();
+    let totalScore = 0, totalNaamCount = 0, maxDayNaamCount = 0;
+    const dayScores = {};
+
+    for (const dateKey of dateKeys) {
+      const s          = sadhanaMap[id]?.[dateKey] || {};
+      const naamPoints = Math.floor((s.naamJaapCount || 0) / 1000) * 10;
+      const dayTotal   = (s.niyam1?.point || 0) + (s.niyam2?.point || 0)
+                       + (s.niyam3?.point || 0) + naamPoints;
+      dayScores[dateKey]  = dayTotal;
+      totalScore         += dayTotal;
+      totalNaamCount     += (s.naamJaapCount || 0);
+      maxDayNaamCount     = Math.max(maxDayNaamCount, s.naamJaapCount || 0);
+    }
+
+    return { bhaktName: c.bhaktName, dayScores, totalScore, totalNaamCount, maxDayNaamCount };
+  }).sort((a, b) => b.totalScore - a.totalScore);
+
+  // Hero = max single-day naam count, Legend = max total naam count
+  let heroName = '', heroCount = 0, legendName = '', legendCount = 0;
+  for (const o of overall) {
+    if (o.maxDayNaamCount > heroCount)  { heroCount = o.maxDayNaamCount; heroName = o.bhaktName; }
+    if (o.totalNaamCount  > legendCount) { legendCount = o.totalNaamCount; legendName = o.bhaktName; }
+  }
+
+  return { days, overall, dates: dateKeys, heroName, legendName };
 }
 
 // ── Get sadhana history for one krishnadas ──────

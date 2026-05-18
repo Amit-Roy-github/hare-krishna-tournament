@@ -1,14 +1,6 @@
 import connectDB                        from '../DB/connection.js';
-import { seedIfEmpty, findByBhaktName } from '../services/krishnaDasService.js';
+import { findByBhaktName }              from '../services/krishnaDasService.js';
 import { upsertTodaySadhana, buildScoresResponse } from '../services/sadhanaService.js';
-
-const DEFAULT_CONTESTANTS = [
-  { bhaktName: 'Gopala Das',  defaultScore: 710 },
-  { bhaktName: 'Mohona Das',  defaultScore: 820 },
-  { bhaktName: 'Krishna Das', defaultScore: 230 },
-  { bhaktName: 'Hari Das',    defaultScore: 950 },
-  { bhaktName: 'Ramu Das',    defaultScore: 810 },
-];
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin',  '*');
@@ -19,10 +11,9 @@ export default async function handler(req, res) {
 
   try {
     await connectDB();
-    await seedIfEmpty(DEFAULT_CONTESTANTS);
 
     if (req.method === 'GET') {
-      const scores = await buildScoresResponse(DEFAULT_CONTESTANTS);
+      const scores = await buildScoresResponse();
       return res.json(scores);
     }
 
@@ -35,7 +26,7 @@ export default async function handler(req, res) {
         await upsertTodaySadhana(krishnaDas._id, fields);
       }
 
-      const scores = await buildScoresResponse(DEFAULT_CONTESTANTS);
+      const scores = await buildScoresResponse();
       return res.json(scores);
     }
 

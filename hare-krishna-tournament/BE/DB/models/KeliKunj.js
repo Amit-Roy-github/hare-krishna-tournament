@@ -24,7 +24,8 @@ const KeliKunjSchema = new mongoose.Schema(
       maxNaamJaap:      { prize: { type: Number, default: 0, min: 0 }, title: { type: String, default: 'Naam Jaap Hero' } },
       totalMaxNaamJaap: { prize: { type: Number, default: 0, min: 0 }, title: { type: String, default: 'Naam Jaap Legend' } },
     },
-    resultDeclared: { type: Boolean, default: false },
+    resultDeclared:  { type: Boolean, default: false },
+    showLeaderboard: { type: Boolean, default: false },
   },
   {
     collection: 'keliKunj',

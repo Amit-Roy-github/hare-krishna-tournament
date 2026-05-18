@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axiosClient from '../api/axiosClient'
+import { getStats } from '../api/statsApi'
 
 const RANK_META = [
   { key: '_1',               rank: '1st', emoji: '🥇', color: '#FFD700', glow: '#FFD70088', label: 'Champion'         },
@@ -43,10 +44,132 @@ function WinnerCard({ meta, week, index }) {
   )
 }
 
+// ── Stats Section ────────────────────────────────────────────────────────────
+
+const fmtTime = (iso) => {
+  if (!iso) return null
+  const d = new Date(iso)
+  if (isNaN(d)) return null
+  return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`
+}
+
+function StatsSection({ stats }) {
+  if (!stats) return null
+  const { days, overall, dates, heroName, legendName } = stats
+
+  return (
+    <div className="stats-section">
+      {/* ── Overall Table ── */}
+      <div className="stats-block">
+        <h3 className="stats-heading">📊 Overall Weekly Score</h3>
+        <div className="stats-table-wrap">
+          <table className="stats-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Name</th>
+                {days.map(d => <th key={d.date}>{d.dayName}</th>)}
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {overall.map((o, i) => (
+                <tr key={o.bhaktName} className={i === 0 ? 'row-gold' : i === 1 ? 'row-silver' : i === 2 ? 'row-bronze' : ''}>
+                  <td className="rank-cell">
+                    {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i + 1}`}
+                  </td>
+                  <td className="name-cell">
+                    {o.bhaktName}
+                    {o.bhaktName === heroName   && <span className="badge-hero"  title="Naam Jaap Hero">🎯</span>}
+                    {o.bhaktName === legendName && <span className="badge-legend" title="Naam Jaap Legend">📿</span>}
+                  </td>
+                  {dates.map(dk => (
+                    <td key={dk} className="score-cell">
+                      {o.dayScores[dk] ?? 0}
+                    </td>
+                  ))}
+                  <td className="score-cell stats-total">{o.totalScore}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="stats-legend-row">
+          <span>🎯 Naam Jaap Hero</span>
+          <span>📿 Naam Jaap Legend</span>
+        </div>
+      </div>
+
+      {/* ── Day-wise Tables ── */}
+      {days.map(day => (
+        <div key={day.date} className="stats-block">
+          <h3 className="stats-heading">
+            📅 {day.dayName} — <span className="stats-date">{day.date}</span>
+          </h3>
+          <div className="stats-table-wrap">
+            <table className="stats-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Name</th>
+                  <th>Niyam 1</th>
+                  <th>Niyam 2</th>
+                  <th>Niyam 3</th>
+                  <th>Naam Pts</th>
+                  <th>Naam Count</th>
+                  <th>Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {day.records.map((r, i) => (
+                  <tr key={r.bhaktName} className={i === 0 ? 'row-gold' : i === 1 ? 'row-silver' : i === 2 ? 'row-bronze' : ''}>
+                    <td className="rank-cell">
+                      {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i + 1}`}
+                    </td>
+                    <td className="name-cell">{r.bhaktName}</td>
+                    {[
+                      [r.niyam1Point, r.niyam1DoneAt],
+                      [r.niyam2Point, r.niyam2DoneAt],
+                      [r.niyam3Point, r.niyam3DoneAt],
+                    ].map(([pt, at], idx) => (
+                      <td key={idx} className="score-cell niyam-cell">
+                        <span>{pt}</span>
+                        {fmtTime(at) && <span className="niyam-time">{fmtTime(at)}</span>}
+                      </td>
+                    ))}
+                    <td className="score-cell">
+                      {r.naamPoints > 0 ? `+${r.naamPoints}` : '0'}
+                    </td>
+                    <td className="today-naam-cell">
+                      {r.naamCount > 0 ? r.naamCount.toLocaleString('en-IN') : '0'}
+                    </td>
+                    <td className="score-cell stats-total">{r.dayTotal}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// ── Home Page ────────────────────────────────────────────────────────────────
+
 export default function Home() {
   const navigate = useNavigate()
-  const [contestants, setContestants] = useState([])
-  const [latestWeek,  setLatestWeek]  = useState(null)
+  const [contestants,  setContestants]  = useState([])
+  const [latestWeek,   setLatestWeek]   = useState(null)
+  const [activeWeek,   setActiveWeek]   = useState(null)  // most-recent week (any)
+  const [stats,        setStats]        = useState(null)
+  const [bannerTaps,   setBannerTaps]   = useState(0)
+
+  const handleBannerTap = () => {
+    const next = bannerTaps + 1
+    if (next >= 3) { navigate('/admin'); setBannerTaps(0) }
+    else setBannerTaps(next)
+  }
 
   useEffect(() => {
     // scores — poll every 5s
@@ -59,14 +182,17 @@ export default function Home() {
     fetchScores()
     const interval = setInterval(fetchScores, 5000)
 
-    // keliKunj — fetch once (latest declared week)
+    // keliKunj — fetch once
     axiosClient.get('/keliKunj').then(({ data }) => {
+      // most-recent week (for showLeaderboard flag)
+      if (data.length > 0) setActiveWeek(data[0])
+      // most-recent *declared* week (for winner display)
       const declared = data.filter(w => w.resultDeclared)
-      if (declared.length > 0) {
-        // already sorted desc by week, pick first
-        setLatestWeek(declared[0])
-      }
+      if (declared.length > 0) setLatestWeek(declared[0])
     }).catch(() => {})
+
+    // stats — fetch once on mount
+    getStats().then(({ data }) => setStats(data)).catch(() => {})
 
     return () => clearInterval(interval)
   }, [])
@@ -103,7 +229,7 @@ export default function Home() {
       <div className="container container--wide">
 
         {/* ── Header ──────────────────────────── */}
-        <div className="top-banner">
+        <div className="top-banner" onClick={handleBannerTap} style={{ cursor: 'default', userSelect: 'none' }}>
           <span className="lotus">🪷</span>
           <span className="chant">Hare Krishna • Hare Krishna</span>
           <span className="lotus">🪷</span>
@@ -116,13 +242,18 @@ export default function Home() {
           </h1>
           <div className="final-day-badge">
             <span className="fire">🔥</span>
-            <span>FINALE</span>
+            <span>
+              {activeWeek && !activeWeek.resultDeclared
+                ? `Week ${activeWeek.keliKunjWeek}`
+                : 'FINALE'}
+            </span>
             <span className="fire">🔥</span>
           </div>
         </div>
 
-        {/* ── Two column layout ────────────────── */}
-        <div className="home-columns">
+        {/* ── Two column layout (leaderboard) ──── */}
+        {/* shown when showLeaderboard is true (or no active week yet) */}
+        <div className="home-columns" style={{ display: (activeWeek?.showLeaderboard ?? false) ? undefined : 'none' }}>
 
           {/* LEFT — Winners */}
           <div className="col-winners">
@@ -196,6 +327,10 @@ export default function Home() {
           </div>
 
         </div>
+
+        {/* ── Stats Section (day-wise tables) ──── */}
+        {/* shown when showLeaderboard is false */}
+        {(activeWeek?.showLeaderboard ?? false) ? null : <StatsSection stats={stats} />}
 
         <div className="nav-btn-row">
           <button className="nav-btn" onClick={() => navigate('/announcement')}>

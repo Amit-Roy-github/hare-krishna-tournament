@@ -1,5 +1,10 @@
 import mongoose from 'mongoose';
 
+const niyamField = {
+  point:  { type: Number, default: 0, min: 0 },
+  doneAt: { type: Date,   default: null },
+};
+
 const SadhanaSchema = new mongoose.Schema(
   {
     krishnadasId: {
@@ -12,13 +17,13 @@ const SadhanaSchema = new mongoose.Schema(
       required: true,   // stores midnight UTC of the day (2025-05-17T00:00:00.000Z)
     },
     naamJaapCount: { type: Number, default: 0, min: 0 },
-    niyam1Point:   { type: Number, default: 0, min: 0 },
-    niyam2Point:   { type: Number, default: 0, min: 0 },
-    niyam3Point:   { type: Number, default: 0, min: 0 },
+    niyam1: niyamField,
+    niyam2: niyamField,
+    niyam3: niyamField,
   },
   {
     collection: 'sadhana',
-    timestamps: true,       // auto createdAt & updatedAt
+    timestamps: true,
   }
 );
 

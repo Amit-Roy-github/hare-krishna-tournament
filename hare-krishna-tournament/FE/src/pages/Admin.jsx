@@ -14,13 +14,6 @@ import { getKeliKunjList, createKeliKunj,
 // ── Constants ────────────────────────────────────
 const EMPTY_USER = { bhaktName: '', email: '', phone: '', sansarName: '' }
 
-const SADHANA_FIELDS = [
-  { key: 'naamJaapCount', label: "Today's Naam" },
-  { key: 'niyam1Point',   label: 'Niyam 1'      },
-  { key: 'niyam2Point',   label: 'Niyam 2'      },
-  { key: 'niyam3Point',   label: 'Niyam 3'      },
-]
-
 // ── Radix Switch — styled toggle ─────────────────
 function PlaygroundSwitch({ checked, onCheckedChange, disabled }) {
   return (
@@ -76,6 +69,24 @@ function DeleteDialog({ bhaktName, onConfirm }) {
   )
 }
 
+// ── Collapsible section wrapper ───────────────────
+function Collapsible({ title, icon, defaultOpen = false, children }) {
+  const [open, setOpen] = useState(false)
+  // honour defaultOpen on first render only
+  const [init, setInit] = useState(false)
+  useEffect(() => { if (!init) { setOpen(defaultOpen); setInit(true) } }, [])
+
+  return (
+    <div className="admin-section collapsible-section">
+      <button className="collapsible-header" type="button" onClick={() => setOpen(o => !o)}>
+        <span className="collapsible-title">{icon} {title}</span>
+        <span className={`collapsible-chevron ${open ? 'collapsible-chevron--open' : ''}`}>▼</span>
+      </button>
+      {open && <div className="collapsible-body">{children}</div>}
+    </div>
+  )
+}
+
 // ── Register Krishnadas ──────────────────────────
 function RegisterSection({ onCreated }) {
   const [form,    setForm]    = useState(EMPTY_USER)
@@ -100,13 +111,12 @@ function RegisterSection({ onCreated }) {
   }
 
   return (
-    <div className="admin-section">
-      <h2 className="admin-section-title">🪷 Register Krishnadas</h2>
+    <Collapsible title="Register Krishnadas" icon="🪷">
       <form onSubmit={handleSubmit}>
         <div className="admin-fields">
           {[
             { key: 'bhaktName',  label: 'Bhakt Name *', placeholder: 'Gopala Das'        },
-            { key: 'sansarName', label: 'Sansar Name',  placeholder: 'Ramesh Kumar'      },
+            { key: 'sansarName', label: 'Sansar Name',  placeholder: 'Rama Das'      },
             { key: 'email',      label: 'Email',        placeholder: 'email@example.com' },
             { key: 'phone',      label: 'Phone',        placeholder: '+91 9876543210'    },
           ].map(({ key, label, placeholder }) => (
@@ -127,8 +137,25 @@ function RegisterSection({ onCreated }) {
           {loading ? 'Registering…' : '+ Register'}
         </button>
       </form>
-    </div>
+    </Collapsible>
   )
+}
+
+// ── Helpers for time ─────────────────────────────
+const toTimeStr = (iso) => {
+  if (!iso) return ''
+  const d = new Date(iso)
+  if (isNaN(d)) return ''
+  // getHours/getMinutes → local time (IST on Indian devices)
+  return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`
+}
+const fromTimeStr = (timeStr) => {
+  if (!timeStr) return null
+  const now = new Date()
+  // Build local date string (not UTC) so JS parses the datetime as local
+  const localDate = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`
+  // No 'Z' → parsed as local time → .toISOString() converts to UTC for DB storage
+  return new Date(`${localDate}T${timeStr}:00`).toISOString()
 }
 
 // ── Update Sadhana ───────────────────────────────
@@ -141,31 +168,30 @@ function UpdateSadhanaSection({ scores, onUpdated }) {
     const init = {}
     scores.forEach(c => {
       init[c.bhaktName] = {
-        naamJaapCount: c.todayNaam   || 0,
-        niyam1Point:   c.niyam1Point || 0,
-        niyam2Point:   c.niyam2Point || 0,
-        niyam3Point:   c.niyam3Point || 0,
+        naamJaapCount: c.todayNaam || 0,
+        niyam1: { point: c.niyam1Point || 0, doneAt: toTimeStr(c.niyam1DoneAt) },
+        niyam2: { point: c.niyam2Point || 0, doneAt: toTimeStr(c.niyam2DoneAt) },
+        niyam3: { point: c.niyam3Point || 0, doneAt: toTimeStr(c.niyam3DoneAt) },
       }
     })
     setFields(init)
   }, [scores])
 
-  const handleChange = (bhaktName, key, value) =>
-    setFields(prev => ({
-      ...prev,
-      [bhaktName]: { ...prev[bhaktName], [key]: value },   // keep raw string while typing
-    }))
+  const setNaam  = (name, val) =>
+    setFields(p => ({ ...p, [name]: { ...p[name], naamJaapCount: val } }))
+  const setNiyam = (name, nk, subKey, val) =>
+    setFields(p => ({ ...p, [name]: { ...p[name], [nk]: { ...p[name][nk], [subKey]: val } } }))
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
     try {
-      // Convert raw strings to numbers only on submit
-      const updates = Object.entries(fields).map(([bhaktName, data]) => ({
+      const updates = Object.entries(fields).map(([bhaktName, d]) => ({
         bhaktName,
-        ...Object.fromEntries(
-          Object.entries(data).map(([k, v]) => [k, Number(v) || 0])
-        ),
+        naamJaapCount: Number(d.naamJaapCount) || 0,
+        niyam1: { point: Number(d.niyam1.point) || 0, doneAt: fromTimeStr(d.niyam1.doneAt) },
+        niyam2: { point: Number(d.niyam2.point) || 0, doneAt: fromTimeStr(d.niyam2.doneAt) },
+        niyam3: { point: Number(d.niyam3.point) || 0, doneAt: fromTimeStr(d.niyam3.doneAt) },
       }))
       await updateScores(updates)
       onUpdated()
@@ -188,34 +214,49 @@ function UpdateSadhanaSection({ scores, onUpdated }) {
     <div className="admin-section">
       <h2 className="admin-section-title">📊 Update Today's Sadhana</h2>
       <form onSubmit={handleSubmit}>
-        <div className="admin-table">
-          {/* Sticky header */}
-          <div className="admin-table-header">
-            <div className="admin-row admin-header admin-row--sadhana">
-              <span>Bhakt Name</span>
-              {SADHANA_FIELDS.map(f => <span key={f.key}>{f.label}</span>)}
-            </div>
+        <div className="sadhana-grid">
+          {/* Header */}
+          <div className="sadhana-row sadhana-row--header">
+            <span>Bhakt Name</span>
+            <span>Naam Jaap</span>
+            <span className="sadhana-niyam-head">Niyam 1</span>
+            <span className="sadhana-niyam-head">Niyam 2</span>
+            <span className="sadhana-niyam-head">Niyam 3</span>
+          </div>
+          {/* Sub-header */}
+          <div className="sadhana-row sadhana-row--subheader">
+            <span /><span />
+            <span>Pts</span><span>Done At</span>
+            <span>Pts</span><span>Done At</span>
+            <span>Pts</span><span>Done At</span>
           </div>
 
-          {/* Scrollable body — vertical scroll kicks in after 6 users */}
-          <div className="admin-table-body">
-            {scores.map(c => (
-              <div key={c.bhaktName} className="admin-row admin-row--sadhana">
+          {/* Data rows */}
+          {scores.map(c => {
+            const f = fields[c.bhaktName]
+            if (!f) return null
+            return (
+              <div key={c.bhaktName} className="sadhana-row">
                 <span className="admin-name">{c.bhaktName}</span>
-                {SADHANA_FIELDS.map(f => (
-                  <input
-                    key={f.key}
-                    className="admin-input"
-                    type="number"
-                    min="0"
-                    value={fields[c.bhaktName]?.[f.key] ?? 0}
-                    onChange={e => handleChange(c.bhaktName, f.key, e.target.value)}
-                  />
-                ))}
+                <input className="admin-input" type="number" min="0"
+                  value={f.naamJaapCount}
+                  onChange={e => setNaam(c.bhaktName, e.target.value)} />
+                {[1, 2, 3].map(n => {
+                  const nk = `niyam${n}`
+                  return [
+                    <input key={`${nk}-pt`} className="admin-input sadhana-pt" type="number" min="0"
+                      value={f[nk].point}
+                      onChange={e => setNiyam(c.bhaktName, nk, 'point', e.target.value)} />,
+                    <input key={`${nk}-at`} className="admin-input sadhana-time" type="time"
+                      value={f[nk].doneAt}
+                      onChange={e => setNiyam(c.bhaktName, nk, 'doneAt', e.target.value)} />,
+                  ]
+                })}
               </div>
-            ))}
-          </div>
+            )
+          })}
         </div>
+
         <button className="admin-submit" type="submit" disabled={loading}>
           {loading ? 'Saving…' : '💾 Save Sadhana'}
         </button>
@@ -281,15 +322,13 @@ function KrishnaDasList({ users, onRefresh }) {
 
   return (
     <Tooltip.Provider delayDuration={300}>
-      <div className="admin-section">
-        <h2 className="admin-section-title">👥 All Krishnadas</h2>
-
+      <Collapsible title="All Krishnadas" icon="👥">
         <div className="kl-table">
           <div className="kl-row kl-header">
             <span>Bhakt Name</span>
             <span>Sansar Name</span>
             <span>Phone</span>
-            <span>In Tournament</span>
+            <span>KeliKunj</span>
             <span>Actions</span>
           </div>
 
@@ -368,7 +407,7 @@ function KrishnaDasList({ users, onRefresh }) {
             </div>
           ))}
         </div>
-      </div>
+      </Collapsible>
     </Tooltip.Provider>
   )
 }
@@ -462,16 +501,18 @@ function KeliKunjSection({ users, keliKunjList, onRefresh }) {
           title: getPoolVal(k.prizePool, key, 'title'),
         }])
       ),
-      resultDeclared: k.resultDeclared ?? false,
+      resultDeclared:  k.resultDeclared  ?? false,
+      showLeaderboard: k.showLeaderboard ?? false,
     })
   }
 
   const saveEdit = async () => {
     try {
       await updateKeliKunj(editId, {
-        winners:        buildWinners(editForm.winners),
-        prizePool:      buildPrizePool(editForm.prizePool),
-        resultDeclared: editForm.resultDeclared,
+        winners:         buildWinners(editForm.winners),
+        prizePool:       buildPrizePool(editForm.prizePool),
+        resultDeclared:  editForm.resultDeclared,
+        showLeaderboard: editForm.showLeaderboard,
       })
       setEditId(null)
       onRefresh()
@@ -495,6 +536,21 @@ function KeliKunjSection({ users, keliKunjList, onRefresh }) {
     }
   }
 
+  const toggleLeaderboard = async (k) => {
+    try {
+      await updateKeliKunj(k._id, {
+        winners:         Object.fromEntries(Object.keys(PRIZE_DEFAULTS).map(key => [key, k.winners?.[key]?._id || null])),
+        prizePool:       k.prizePool,
+        showLeaderboard: !(k.showLeaderboard ?? false),
+      })
+      onRefresh()
+      const next = !(k.showLeaderboard ?? false)
+      toast.success(`Week ${k.keliKunjWeek}: showing ${next ? 'Leaderboard' : 'Day-wise Tables'}`)
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Update failed')
+    }
+  }
+
   const WinnerSelect = ({ value, onChange }) => (
     <select className="admin-input kk-select" value={value} onChange={e => onChange(e.target.value)}>
       <option value="">— None —</option>
@@ -505,9 +561,7 @@ function KeliKunjSection({ users, keliKunjList, onRefresh }) {
   )
 
   return (
-    <div className="admin-section">
-      <h2 className="admin-section-title">🏆 KeliKunj — Winners</h2>
-
+    <Collapsible title="KeliKunj — Winners" icon="🏆">
       {/* ── Create form ── */}
       <form onSubmit={handleCreate}>
         <div className="kk-card kk-card--create">
@@ -561,6 +615,14 @@ function KeliKunjSection({ users, keliKunjList, onRefresh }) {
                       >
                         <Switch.Thumb className="switch-thumb" />
                       </Switch.Root>
+                      <span className="admin-field-label" style={{ marginRight: '0.4rem', marginLeft: '0.6rem' }}>Leaderboard</span>
+                      <Switch.Root
+                        className={`switch-root ${editForm.showLeaderboard ? 'switch-root--on' : 'switch-root--off'}`}
+                        checked={editForm.showLeaderboard ?? false}
+                        onCheckedChange={v => setEditForm(p => ({ ...p, showLeaderboard: v }))}
+                      >
+                        <Switch.Thumb className="switch-thumb" />
+                      </Switch.Root>
                       <button className="kl-btn kl-btn--save"   onClick={saveEdit}><Check size={15}/></button>
                       <button className="kl-btn kl-btn--cancel" onClick={() => setEditId(null)}><X size={15}/></button>
                     </>
@@ -571,6 +633,14 @@ function KeliKunjSection({ users, keliKunjList, onRefresh }) {
                         className={`switch-root ${k.resultDeclared ? 'switch-root--on' : 'switch-root--off'}`}
                         checked={!!k.resultDeclared}
                         onCheckedChange={() => toggleDeclared(k)}
+                      >
+                        <Switch.Thumb className="switch-thumb" />
+                      </Switch.Root>
+                      <span className="admin-field-label" style={{ fontSize: '0.8rem', opacity: 0.7, marginLeft: '0.6rem' }}>Leaderboard</span>
+                      <Switch.Root
+                        className={`switch-root ${(k.showLeaderboard ?? false) ? 'switch-root--on' : 'switch-root--off'}`}
+                        checked={!!(k.showLeaderboard ?? false)}
+                        onCheckedChange={() => toggleLeaderboard(k)}
                       >
                         <Switch.Thumb className="switch-thumb" />
                       </Switch.Root>
@@ -606,7 +676,7 @@ function KeliKunjSection({ users, keliKunjList, onRefresh }) {
           ))}
         </div>
       )}
-    </div>
+    </Collapsible>
   )
 }
 
@@ -646,10 +716,11 @@ export default function Admin() {
           Admin <span className="title-highlight">Dashboard</span>
         </h1>
 
-        <div className="admin-columns">
-          <RegisterSection onCreated={refresh} />
-          <UpdateSadhanaSection scores={scores} onUpdated={refresh} />
-        </div>
+        <RegisterSection onCreated={refresh} />
+
+        <div className="admin-divider" />
+
+        <UpdateSadhanaSection scores={scores} onUpdated={refresh} />
 
         <div className="admin-divider" />
 

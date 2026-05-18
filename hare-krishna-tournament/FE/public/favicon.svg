@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Quill / stem -->
+  <line x1="50" y1="95" x2="50" y2="38" stroke="#4a7c2f" stroke-width="2.5" stroke-linecap="round"/>
+
+  <!-- Feather vanes fanning out -->
+  <path d="M50 70 Q30 58 18 42" stroke="#3a8c3f" stroke-width="1.2" fill="none" opacity="0.7"/>
+  <path d="M50 70 Q35 55 28 36" stroke="#4a9c3f" stroke-width="1.2" fill="none" opacity="0.7"/>
+  <path d="M50 70 Q42 53 40 34" stroke="#5aaa3f" stroke-width="1.2" fill="none" opacity="0.8"/>
+  <path d="M50 70 Q50 52 50 32"  stroke="#5aaa3f" stroke-width="1.2" fill="none" opacity="0.8"/>
+  <path d="M50 70 Q58 53 60 34" stroke="#5aaa3f" stroke-width="1.2" fill="none" opacity="0.8"/>
+  <path d="M50 70 Q65 55 72 36" stroke="#4a9c3f" stroke-width="1.2" fill="none" opacity="0.7"/>
+  <path d="M50 70 Q70 58 82 42" stroke="#3a8c3f" stroke-width="1.2" fill="none" opacity="0.7"/>
+
+  <!-- Eye outer glow -->
+  <ellipse cx="50" cy="28" rx="14" ry="17" fill="#1a6b2a" opacity="0.5"/>
+
+  <!-- Eye — outer ring (dark teal/green) -->
+  <ellipse cx="50" cy="28" rx="12" ry="14" fill="#1a7a3a"/>
+
+  <!-- Eye — middle ring (blue) -->
+  <ellipse cx="50" cy="28" rx="8.5" ry="10" fill="#1a4a9a"/>
+
+  <!-- Eye — inner ring (bright teal) -->
+  <ellipse cx="50" cy="28" rx="5.5" ry="6.5" fill="#00bcd4"/>
+
+  <!-- Eye — pupil (dark) -->
+  <ellipse cx="50" cy="28" rx="3" ry="3.8" fill="#0d1a3a"/>
+
+  <!-- Eye — highlight -->
+  <ellipse cx="48.5" cy="26" rx="1.2" ry="1.5" fill="rgba(255,255,255,0.55)"/>
+</svg>
