@@ -4,6 +4,7 @@ import toast, { Toaster }                   from 'react-hot-toast'
 import * as Switch                           from '@radix-ui/react-switch'
 import * as AlertDialog                      from '@radix-ui/react-alert-dialog'
 import * as Tooltip                          from '@radix-ui/react-tooltip'
+import * as Popover                          from '@radix-ui/react-popover'
 import { Pencil, Trash2, Check, X }         from 'lucide-react'
 import { getScores, updateScores }           from '../api/sadhanaApi'
 import { getKrishnaDasList, createKrishnaDas,
@@ -141,6 +142,70 @@ function RegisterSection({ onCreated }) {
   )
 }
 
+// ── Time Picker (Radix Popover, card-based, no scroll) ──
+const HOURS   = Array.from({ length: 24 }, (_, h) => h)
+const MINUTES = Array.from({ length: 60 }, (_, m) => m)
+
+function TimePicker({ value, onChange }) {
+  const [open, setOpen] = useState(false)
+  const selH = value ? parseInt(value.split(':')[0], 10) : null
+  const selM = value ? parseInt(value.split(':')[1], 10) : null
+
+  const pickHour = (h) => {
+    const mm = selM ?? 0
+    onChange(`${String(h).padStart(2,'0')}:${String(mm).padStart(2,'0')}`)
+  }
+
+  const pickMin = (m) => {
+    const hh = selH ?? 0
+    onChange(`${String(hh).padStart(2,'0')}:${String(m).padStart(2,'0')}`)
+    setOpen(false)
+  }
+
+  return (
+    <Popover.Root open={open} onOpenChange={setOpen}>
+      <Popover.Trigger asChild>
+        <button type="button" className={`tp-trigger ${value ? 'tp-trigger--set' : ''}`}>
+          🕐 {value || 'Set time'}
+        </button>
+      </Popover.Trigger>
+
+      <Popover.Portal>
+        <Popover.Content className="tp-panel" side="bottom" align="center" sideOffset={6} collisionPadding={12}>
+          <div className="tp-header">
+            <span className="tp-header-time">{value || '—'}</span>
+            <button type="button" className="tp-clear" onClick={() => { onChange(''); setOpen(false) }}>✕</button>
+          </div>
+
+          <div className="tp-section-label">Hour</div>
+          <div className="tp-grid tp-grid--hours">
+            {HOURS.map(h => (
+              <button key={h} type="button"
+                className={`tp-chip ${selH === h ? 'tp-chip--sel' : ''}`}
+                onClick={() => pickHour(h)}>
+                {String(h).padStart(2,'0')}
+              </button>
+            ))}
+          </div>
+
+          <div className="tp-section-label">Minute</div>
+          <div className="tp-grid tp-grid--mins">
+            {MINUTES.map(m => (
+              <button key={m} type="button"
+                className={`tp-chip ${selM === m ? 'tp-chip--sel' : ''}`}
+                onClick={() => pickMin(m)}>
+                {String(m).padStart(2,'0')}
+              </button>
+            ))}
+          </div>
+
+          <Popover.Arrow className="tp-arrow" />
+        </Popover.Content>
+      </Popover.Portal>
+    </Popover.Root>
+  )
+}
+
 // ── Helpers for time ─────────────────────────────
 const toTimeStr = (iso) => {
   if (!iso) return ''
@@ -215,7 +280,7 @@ function UpdateSadhanaSection({ scores, onUpdated }) {
       <h2 className="admin-section-title">📊 Update Today's Sadhana</h2>
       <form onSubmit={handleSubmit}>
         <div className="sadhana-grid">
-          {/* Header */}
+          {/* Header — 5 cols: name | naam | niyam1 | niyam2 | niyam3 */}
           <div className="sadhana-row sadhana-row--header">
             <span>Bhakt Name</span>
             <span>Naam Jaap</span>
@@ -226,9 +291,11 @@ function UpdateSadhanaSection({ scores, onUpdated }) {
           {/* Sub-header */}
           <div className="sadhana-row sadhana-row--subheader">
             <span /><span />
-            <span>Pts</span><span>Done At</span>
-            <span>Pts</span><span>Done At</span>
-            <span>Pts</span><span>Done At</span>
+            {[1, 2, 3].map(n => (
+              <span key={n} className="sadhana-pair-sub">
+                <span>Pts</span><span>Done At</span>
+              </span>
+            ))}
           </div>
 
           {/* Data rows */}
@@ -243,14 +310,16 @@ function UpdateSadhanaSection({ scores, onUpdated }) {
                   onChange={e => setNaam(c.bhaktName, e.target.value)} />
                 {[1, 2, 3].map(n => {
                   const nk = `niyam${n}`
-                  return [
-                    <input key={`${nk}-pt`} className="admin-input sadhana-pt" type="number" min="0"
-                      value={f[nk].point}
-                      onChange={e => setNiyam(c.bhaktName, nk, 'point', e.target.value)} />,
-                    <input key={`${nk}-at`} className="admin-input sadhana-time" type="time"
-                      value={f[nk].doneAt}
-                      onChange={e => setNiyam(c.bhaktName, nk, 'doneAt', e.target.value)} />,
-                  ]
+                  return (
+                    <div key={nk} className="niyam-pair">
+                      <input className="admin-input sadhana-pt" type="number" min="0"
+                        value={f[nk].point}
+                        onChange={e => setNiyam(c.bhaktName, nk, 'point', e.target.value)} />
+                      <TimePicker
+                        value={f[nk].doneAt}
+                        onChange={v => setNiyam(c.bhaktName, nk, 'doneAt', v)} />
+                    </div>
+                  )
                 })}
               </div>
             )

@@ -69,6 +69,8 @@ function StatsSection({ stats }) {
                 <th>#</th>
                 <th>Name</th>
                 {days.map(d => <th key={d.date}>{d.dayName}</th>)}
+                <th>Best Day</th>
+                <th>Naam Total</th>
                 <th>Total</th>
               </tr>
             </thead>
@@ -88,6 +90,8 @@ function StatsSection({ stats }) {
                       {o.dayScores[dk] ?? 0}
                     </td>
                   ))}
+                  <td className="score-cell">{(o.maxDayNaamCount || 0).toLocaleString('en-IN')}</td>
+                  <td className="score-cell">{(o.totalNaamCount  || 0).toLocaleString('en-IN')}</td>
                   <td className="score-cell stats-total">{o.totalScore}</td>
                 </tr>
               ))}
@@ -95,13 +99,19 @@ function StatsSection({ stats }) {
           </table>
         </div>
         <div className="stats-legend-row">
-          <span>🎯 Naam Jaap Hero</span>
-          <span>📿 Naam Jaap Legend</span>
+          <span className="stats-legend-item">
+            <span className="stats-legend-label">🎯 Naam Jaap Hero</span>
+            {heroName && <span className="stats-legend-name">{heroName}</span>}
+          </span>
+          <span className="stats-legend-item">
+            <span className="stats-legend-label">📿 Naam Jaap Legend</span>
+            {legendName && <span className="stats-legend-name">{legendName}</span>}
+          </span>
         </div>
       </div>
 
-      {/* ── Day-wise Tables ── */}
-      {days.map(day => (
+      {/* ── Day-wise Tables ── (most recent first) */}
+      {[...days].reverse().map(day => (
         <div key={day.date} className="stats-block">
           <h3 className="stats-heading">
             📅 {day.dayName} — <span className="stats-date">{day.date}</span>

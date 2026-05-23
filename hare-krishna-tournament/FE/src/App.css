@@ -368,6 +368,26 @@
   }
 
   .rank-cell { font-size: 1rem; }
+
+  /* Reduce container side padding so tables use full width */
+  .container {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+
+  /* Stats blocks flush to edges */
+  .stats-block {
+    padding-left: 8px;
+    padding-right: 8px;
+    border-radius: 10px;
+  }
+
+  /* Tighter table cell padding on mobile */
+  .stats-table th,
+  .stats-table td {
+    padding: 6px 7px;
+    font-size: 0.75rem;
+  }
 }
 
 /* ── Scoreboard ──────────────────────────────── */
@@ -716,6 +736,45 @@
   }
 }
 
+@media (max-width: 700px) {
+  /* Reduce admin section side padding */
+  .admin-section {
+    padding: 16px 10px;
+    border-radius: 12px;
+  }
+
+  /* Register form: stack label above input */
+  .admin-field-row {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+  .admin-field-label {
+    text-align: left;
+    font-size: 0.82rem;
+  }
+
+
+  /* kk-card inner padding */
+  .kk-card {
+    padding: 0.85rem 0.75rem;
+  }
+
+  /* Collapsible body: flush on mobile */
+  .collapsible-body {
+    padding: 12px 8px 16px;
+  }
+
+  /* Sadhana grid: tighter cell padding */
+  .sadhana-row .admin-input {
+    padding: 4px 4px;
+    font-size: 0.75rem;
+  }
+
+  .admin-name {
+    font-size: 0.82rem;
+  }
+}
+
 .admin-fields {
   display: flex;
   flex-direction: column;
@@ -889,15 +948,18 @@
   background: rgba(255,255,255,0.04);
   border: 1px solid #FF980033;
   border-radius: 1rem;
-  overflow: hidden;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   margin-bottom: 1.5rem;
 }
+
 
 .kl-row {
   display: grid;
   grid-template-columns: 1.6fr 1.4fr 1.2fr 1fr 1fr;
   align-items: center;
   min-height: 3.5rem;
+  min-width: 560px;
   padding: 0.75rem 1.25rem;
   border-bottom: 1px solid rgba(255,255,255,0.05);
   gap: 0.75rem;
@@ -970,6 +1032,8 @@
   flex-direction: column;
   gap: 0.65rem;
   transition: border-color 0.2s;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 .kk-card--create {
   margin-bottom: 1.5rem;
@@ -1025,6 +1089,7 @@
   grid-template-columns: 9.5rem 1fr 3.5rem 1fr 6rem 1fr;
   align-items: center;
   gap: 0.5rem 0.75rem;
+  min-width: 520px;
 }
 
 .kk-place-label {
@@ -1601,6 +1666,7 @@
   color: #FFD700;
 }
 
+
 .badge-hero {
   display: inline-block;
   margin-left: 5px;
@@ -1621,9 +1687,24 @@
   display: flex;
   gap: 20px;
   margin-top: 10px;
+  padding-left: 2px;
+}
+
+.stats-legend-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.stats-legend-label {
   font-size: 0.75rem;
   color: rgba(255, 255, 255, 0.45);
-  padding-left: 2px;
+}
+
+.stats-legend-name {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.9);
 }
 
 /* row colour re-use from scoreboard */
@@ -1649,7 +1730,7 @@
 /* ── Collapsible sections ────────────────────────── */
 .collapsible-section {
   padding: 0 !important;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .collapsible-header {
@@ -1700,34 +1781,49 @@
   margin-bottom: 16px;
 }
 
-/* 8-col grid: name | naam | n1pt | n1at | n2pt | n2at | n3pt | n3at */
-.sadhana-row {
-  display: grid;
-  grid-template-columns: 2fr 1.2fr repeat(6, 1fr);
-  gap: 6px;
-  align-items: center;
-  padding: 5px 0;
-  min-width: 680px;
-}
-
-.sadhana-row--header {
-  /* spans: name | naam | niyam1(span2) | niyam2(span2) | niyam3(span2) */
-  display: grid;
-  grid-template-columns: 2fr 1.2fr 2fr 2fr 2fr;
-  gap: 6px;
-  padding: 8px 0 2px;
-  min-width: 680px;
-  border-bottom: 1px solid rgba(255, 215, 0, 0.15);
-}
-
+/* 5-col grid: name | naam | niyam1-pair | niyam2-pair | niyam3-pair */
+.sadhana-row,
+.sadhana-row--header,
 .sadhana-row--subheader {
   display: grid;
-  grid-template-columns: 2fr 1.2fr repeat(6, 1fr);
-  gap: 6px;
-  padding: 2px 0 6px;
-  min-width: 680px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  margin-bottom: 2px;
+  grid-template-columns: 130px 90px repeat(3, 150px);
+  column-gap: 8px;
+  row-gap: 0;
+  align-items: center;
+  min-width: 620px;
+  box-sizing: border-box;
+}
+
+.sadhana-row        { padding: 5px 0; }
+.sadhana-row--header   { padding: 8px 0 2px; border-bottom: 1px solid rgba(255, 215, 0, 0.15); }
+.sadhana-row--subheader { padding: 2px 0 6px; border-bottom: 1px solid rgba(255, 255, 255, 0.06); margin-bottom: 2px; }
+
+/* Each niyam cell: Pts input + TimePicker side by side, tight */
+.niyam-pair {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  min-width: 0;
+}
+.niyam-pair .sadhana-pt {
+  flex: 0 0 52px;
+  width: 52px;
+}
+.niyam-pair .tp-trigger {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+/* Sub-header niyam cell: "Pts  Done At" as a mini flex row */
+.sadhana-pair-sub {
+  display: flex;
+  justify-content: space-around;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: rgba(255, 215, 0, 0.75);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 
 .sadhana-row--header span,
@@ -1764,6 +1860,138 @@
 
 .sadhana-pt {
   max-width: 70px;
+}
+
+/* ── Time Picker (Radix Popover) ─────────────────── */
+.tp-trigger {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1.5px solid rgba(255, 255, 255, 0.16);
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 0.88rem;
+  padding: 6px 10px;
+  cursor: pointer;
+  white-space: nowrap;
+  width: 100%;
+  text-align: center;
+  transition: border-color 0.15s, background 0.15s;
+  font-family: inherit;
+}
+.tp-trigger--set {
+  color: #FFD700;
+  border-color: rgba(255, 215, 0, 0.45);
+  background: rgba(255, 215, 0, 0.07);
+}
+.tp-trigger:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+/* Panel — rendered via Radix portal, always on top */
+.tp-panel {
+  background: #1e1030;
+  border: 1.5px solid rgba(255, 152, 0, 0.45);
+  border-radius: 14px;
+  padding: 14px;
+  width: min(280px, 90vw);
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255,152,0,0.1);
+  animation: tp-fade-in 0.12s ease;
+  z-index: 9999;
+}
+@keyframes tp-fade-in {
+  from { opacity: 0; transform: translateY(-4px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0)   scale(1);    }
+}
+
+.tp-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+.tp-header-time {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #FFD700;
+  letter-spacing: 0.05em;
+}
+
+.tp-clear {
+  background: rgba(255, 107, 107, 0.12);
+  border: 1px solid rgba(255, 107, 107, 0.3);
+  border-radius: 6px;
+  color: rgba(255, 107, 107, 0.8);
+  font-size: 0.82rem;
+  padding: 3px 8px;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+  font-family: inherit;
+}
+.tp-clear:hover {
+  background: rgba(255, 107, 107, 0.25);
+  color: #ff6b6b;
+}
+
+.tp-section-label {
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 6px;
+  margin-top: 4px;
+}
+
+.tp-grid {
+  display: grid;
+  gap: 5px;
+  margin-bottom: 10px;
+}
+.tp-grid--hours {
+  grid-template-columns: repeat(6, 1fr);
+}
+.tp-grid--mins {
+  grid-template-columns: repeat(6, 1fr);
+}
+.tp-grid--mins .tp-chip {
+  padding: 5px 2px;
+  font-size: 0.78rem;
+}
+
+.tp-chip {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 7px;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.85rem;
+  padding: 7px 2px;
+  cursor: pointer;
+  text-align: center;
+  transition: background 0.1s, border-color 0.1s, transform 0.1s;
+  font-family: inherit;
+  font-weight: 500;
+}
+.tp-chip:hover {
+  background: rgba(255, 152, 0, 0.22);
+  border-color: rgba(255, 152, 0, 0.55);
+  transform: scale(1.08);
+}
+.tp-chip:active {
+  transform: scale(0.95);
+}
+.tp-chip--sel {
+  background: linear-gradient(135deg, #FF9800, #FF6500);
+  border-color: #FF9800;
+  color: #000;
+  font-weight: 700;
+  box-shadow: 0 2px 10px rgba(255, 152, 0, 0.45);
+}
+
+.tp-arrow {
+  fill: #1e1030;
+  stroke: rgba(255, 152, 0, 0.45);
+  stroke-width: 1.5;
 }
 
 .sadhana-row .admin-name {
