@@ -53,62 +53,70 @@ const fmtTime = (iso) => {
   return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`
 }
 
-function StatsSection({ stats }) {
+function OverallScoreBlock({ stats }) {
   if (!stats) return null
   const { days, overall, dates, heroName, legendName } = stats
+  return (
+    <div className="stats-block">
+      <h3 className="stats-heading">📊 Overall Weekly Score</h3>
+      <div className="stats-table-wrap">
+        <table className="stats-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Name</th>
+              {days.map(d => <th key={d.date}>{d.dayName}</th>)}
+              <th>Best Day</th>
+              <th>Naam Total</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {overall.map((o, i) => (
+              <tr key={o.bhaktName} className={i === 0 ? 'row-gold' : i === 1 ? 'row-silver' : i === 2 ? 'row-bronze' : ''}>
+                <td className="rank-cell">
+                  {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i + 1}`}
+                </td>
+                <td className="name-cell">
+                  {o.bhaktName}
+                  {o.bhaktName === heroName   && <span className="badge-hero"  title="Naam Jaap Hero">🎯</span>}
+                  {o.bhaktName === legendName && <span className="badge-legend" title="Naam Jaap Legend">📿</span>}
+                </td>
+                {dates.map(dk => (
+                  <td key={dk} className="score-cell">
+                    {o.dayScores[dk] ?? 0}
+                  </td>
+                ))}
+                <td className="score-cell">{(o.maxDayNaamCount || 0).toLocaleString('en-IN')}</td>
+                <td className="score-cell">{(o.totalNaamCount  || 0).toLocaleString('en-IN')}</td>
+                <td className="score-cell stats-total">{o.totalScore}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className="stats-legend-row">
+        <span className="stats-legend-item">
+          <span className="stats-legend-label">🎯 Naam Jaap Hero</span>
+          {heroName && <span className="stats-legend-name">{heroName}</span>}
+        </span>
+        <span className="stats-legend-item">
+          <span className="stats-legend-label">📿 Naam Jaap Legend</span>
+          {legendName && <span className="stats-legend-name">{legendName}</span>}
+        </span>
+      </div>
+    </div>
+  )
+}
+
+function StatsSection({ stats }) {
+  if (!stats) return null
+  const { days } = stats
 
   return (
     <div className="stats-section">
       {/* ── Overall Table ── */}
-      <div className="stats-block">
-        <h3 className="stats-heading">📊 Overall Weekly Score</h3>
-        <div className="stats-table-wrap">
-          <table className="stats-table">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Name</th>
-                {days.map(d => <th key={d.date}>{d.dayName}</th>)}
-                <th>Best Day</th>
-                <th>Naam Total</th>
-                <th>Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              {overall.map((o, i) => (
-                <tr key={o.bhaktName} className={i === 0 ? 'row-gold' : i === 1 ? 'row-silver' : i === 2 ? 'row-bronze' : ''}>
-                  <td className="rank-cell">
-                    {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i + 1}`}
-                  </td>
-                  <td className="name-cell">
-                    {o.bhaktName}
-                    {o.bhaktName === heroName   && <span className="badge-hero"  title="Naam Jaap Hero">🎯</span>}
-                    {o.bhaktName === legendName && <span className="badge-legend" title="Naam Jaap Legend">📿</span>}
-                  </td>
-                  {dates.map(dk => (
-                    <td key={dk} className="score-cell">
-                      {o.dayScores[dk] ?? 0}
-                    </td>
-                  ))}
-                  <td className="score-cell">{(o.maxDayNaamCount || 0).toLocaleString('en-IN')}</td>
-                  <td className="score-cell">{(o.totalNaamCount  || 0).toLocaleString('en-IN')}</td>
-                  <td className="score-cell stats-total">{o.totalScore}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <div className="stats-legend-row">
-          <span className="stats-legend-item">
-            <span className="stats-legend-label">🎯 Naam Jaap Hero</span>
-            {heroName && <span className="stats-legend-name">{heroName}</span>}
-          </span>
-          <span className="stats-legend-item">
-            <span className="stats-legend-label">📿 Naam Jaap Legend</span>
-            {legendName && <span className="stats-legend-name">{legendName}</span>}
-          </span>
-        </div>
-      </div>
+      <OverallScoreBlock stats={stats} />
 
       {/* ── Day-wise Tables ── (most recent first) */}
       {[...days].reverse().map(day => (
@@ -253,7 +261,7 @@ export default function Home() {
           <div className="final-day-badge">
             <span className="fire">🔥</span>
             <span>
-              {activeWeek && !activeWeek.resultDeclared
+              {activeWeek && activeWeek.keliKunjWeek < 2 && !activeWeek.resultDeclared
                 ? `Week ${activeWeek.keliKunjWeek}`
                 : 'FINALE'}
             </span>
@@ -261,86 +269,38 @@ export default function Home() {
           </div>
         </div>
 
-        {/* ── Two column layout (leaderboard) ──── */}
-        {/* shown when showLeaderboard is true (or no active week yet) */}
-        <div className="home-columns" style={{ display: (activeWeek?.showLeaderboard ?? false) ? undefined : 'none' }}>
+        {/* ── Layout: row-based when showLeaderboard, day-wise tables otherwise ── */}
+        {(activeWeek?.showLeaderboard ?? false) ? (
+          <div className="home-rows">
 
-          {/* LEFT — Winners */}
-          <div className="col-winners">
-            <div className="winner-crown">👑</div>
-            <h2 className="winner-heading">
-              {latestWeek ? `Week ${latestWeek.keliKunjWeek} Winners!` : 'Be the Winners'}
-            </h2>
-            <p className="winner-sub">
-              {latestWeek
-                ? 'By the grace of Shri Krishna the champions have emerged.'
-                : 'Results will be revealed once declared by the admin.'}
-            </p>
-            <div className="winner-grid winner-grid--col">
-              {RANK_META.map((meta, i) => (
-                <WinnerCard key={meta.key} meta={meta} week={latestWeek} index={i} />
-              ))}
+            {/* TOP — Overall Weekly Score (same table as in day-wise stats) */}
+            <OverallScoreBlock stats={stats} />
+
+            {/* BOTTOM — Winners */}
+            <div className="col-winners col-winners--row">
+              <div className="winner-crown">👑</div>
+              <h2 className="winner-heading">
+                {latestWeek ? `Week ${latestWeek.keliKunjWeek} Winners!` : 'Be the Winners'}
+              </h2>
+              <p className="winner-sub">
+                {latestWeek
+                  ? 'By the grace of Shri Krishna the champions have emerged.'
+                  : 'Results will be revealed once declared by the admin.'}
+              </p>
+              <div className="winner-grid winner-grid--col">
+                {RANK_META.map((meta, i) => (
+                  <WinnerCard key={meta.key} meta={meta} week={latestWeek} index={i} />
+                ))}
+              </div>
+              <p className="winner-blessing">
+                🙏 Hare Krishna blessings be with you 🙏
+              </p>
             </div>
-            <p className="winner-blessing">
-              🙏 Hare Krishna blessings be with you 🙏
-            </p>
+
           </div>
-
-          {/* RIGHT — Leaderboard */}
-          <div className="col-scores">
-            <h2 className="scoreboard-title">
-              Leaderboard {!latestWeek && <span className="live-badge">● LIVE</span>}
-            </h2>
-            <table className="scoreboard-table">
-              <thead>
-                <tr>
-                  <th>Rank</th>
-                  <th>Name</th>
-                  <th>Today's Naam</th>
-                  <th>Naam Score</th>
-                  <th>Total Score</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rankedContestants.map(c => {
-                  const naamScore = Math.floor((c.todayNaam || 0) / 1000) * 10
-                  return (
-                    <tr
-                      key={c.bhaktName}
-                      className={
-                        c.rank === 1 ? 'row-gold'
-                        : c.rank === 2 ? 'row-silver'
-                        : c.rank === 3 ? 'row-bronze'
-                        : c.rank === 4 ? 'row-4'
-                        : 'row-5'
-                      }
-                    >
-                      <td className="rank-cell">
-                        {c.rank === 1 ? '🥇' : c.rank === 2 ? '🥈' : c.rank === 3 ? '🥉' : `#${c.rank}`}
-                      </td>
-                      <td className="name-cell">{c.bhaktName}</td>
-                      <td className="today-naam-cell">
-                        {c.todayNaam > 0 ? c.todayNaam.toLocaleString('en-IN') : '0'}
-                      </td>
-                      <td className="naam-score-cell">
-                        {naamScore > 0 ? `+${naamScore}` : '0'}
-                      </td>
-                      <td className="score-cell">{c.score}</td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-            <div className="scoring-formula">
-              🕉️ Every 1000 Naam → +10 points &nbsp;·&nbsp; 2000 Naam → +20 points
-            </div>
-          </div>
-
-        </div>
-
-        {/* ── Stats Section (day-wise tables) ──── */}
-        {/* shown when showLeaderboard is false */}
-        {(activeWeek?.showLeaderboard ?? false) ? null : <StatsSection stats={stats} />}
+        ) : (
+          <StatsSection stats={stats} />
+        )}
 
         <div className="nav-btn-row">
           <button className="nav-btn" onClick={() => navigate('/announcement')}>

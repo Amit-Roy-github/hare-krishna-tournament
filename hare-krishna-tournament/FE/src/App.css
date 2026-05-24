@@ -316,12 +316,24 @@
   max-width: 1100px;
 }
 
-/* ── Two column layout ───────────────────────── */
+/* ── Two column layout (kept for reference, no longer used) ─── */
 .home-columns {
   display: flex;
   gap: 40px;
   align-items: stretch;
   margin-bottom: 32px;
+}
+
+/* ── Row-based layout (showLeaderboard mode) ────────────────── */
+.home-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  margin-bottom: 32px;
+}
+
+.col-winners--row {
+  text-align: center;
 }
 
 .col-winners {
