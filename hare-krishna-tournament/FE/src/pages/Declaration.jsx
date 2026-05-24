@@ -1,20 +1,31 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 
+function getNextSunday5pm() {
+  const now    = new Date()
+  const target = new Date(now)
+  const day    = now.getDay()                      // 0=Sun … 6=Sat
+  const daysUntilSunday = day === 0 ? 0 : 7 - day
+  target.setDate(now.getDate() + daysUntilSunday)
+  target.setHours(17, 0, 0, 0)                     // 5:00 PM
+  // If it's Sunday but 5pm already passed, jump to next Sunday
+  if (target <= now) target.setDate(target.getDate() + 7)
+  return target
+}
+
 function getTimeLeft() {
-  const now       = new Date()
-  const target    = new Date()
-  target.setHours(17, 0, 0, 0) // 5:00 PM today
+  const now    = new Date()
+  const target = getNextSunday5pm()
+  const diff   = target - now
 
-  const diff = target - now
+  if (diff <= 0) return null
 
-  if (diff <= 0) return null  // time reached
-
-  const hours   = Math.floor(diff / (1000 * 60 * 60))
+  const days    = Math.floor(diff / (1000 * 60 * 60 * 24))
+  const hours   = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
   const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
   const seconds = Math.floor((diff % (1000 * 60)) / 1000)
 
-  return { hours, minutes, seconds }
+  return { days, hours, minutes, seconds }
 }
 
 export default function Declaration() {
@@ -68,9 +79,9 @@ export default function Declaration() {
         <div className="declaration-box">
           <div className="declaration-crown">👑</div>
           <p className="declaration-label">Winner Declaration</p>
-          <p className="declaration-time">5:00 PM</p>
+          <p className="declaration-time">Sunday 5:00 PM</p>
           <p className="declaration-sub">
-            Today's champion will be announced at<br />
+            This Sunday's champion will be announced at<br />
             <strong>5:00 PM sharp</strong> — stay tuned!
           </p>
         </div>
@@ -80,6 +91,15 @@ export default function Declaration() {
           <div className="countdown-section">
             <p className="countdown-label">⏳ Time Remaining</p>
             <div className="countdown-grid">
+              {timeLeft.days > 0 && (
+                <>
+                  <div className="countdown-unit">
+                    <span className="countdown-num">{pad(timeLeft.days)}</span>
+                    <span className="countdown-tag">Days</span>
+                  </div>
+                  <span className="countdown-sep">:</span>
+                </>
+              )}
               <div className="countdown-unit">
                 <span className="countdown-num">{pad(timeLeft.hours)}</span>
                 <span className="countdown-tag">Hours</span>

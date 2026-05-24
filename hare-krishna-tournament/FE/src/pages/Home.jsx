@@ -273,15 +273,23 @@ export default function Home() {
             {/* TOP — Overall Weekly Score (same table as in day-wise stats) */}
             <OverallScoreBlock stats={stats} />
 
-            {/* BOTTOM — Winners (only shown when result is declared) */}
-            {activeWeek?.resultDeclared && (
+            {/* BOTTOM — Positions always shown; names only when resultDeclared */}
+            {activeWeek && (
               <div className="col-winners col-winners--row">
                 <div className="winner-crown">👑</div>
-                <h2 className="winner-heading">{getWeekTitle(activeWeek.keliKunjWeek)} Winners!</h2>
-                <p className="winner-sub">By the grace of Shri Krishna the champions have emerged.</p>
+                <h2 className="winner-heading">
+                  {activeWeek.resultDeclared
+                    ? `${getWeekTitle(activeWeek.keliKunjWeek)} Winners!`
+                    : `${getWeekTitle(activeWeek.keliKunjWeek)} — Prize Pool`}
+                </h2>
+                <p className="winner-sub">
+                  {activeWeek.resultDeclared
+                    ? 'By the grace of Shri Krishna the champions have emerged.'
+                    : 'Results will be revealed once declared by the admin.'}
+                </p>
                 <div className="winner-grid winner-grid--col">
                   {RANK_META.map((meta, i) => (
-                    <WinnerCard key={meta.key} meta={meta} week={activeWeek} index={i} showName={false} />
+                    <WinnerCard key={meta.key} meta={meta} week={activeWeek} index={i} showName={activeWeek.resultDeclared} />
                   ))}
                 </div>
                 <p className="winner-blessing">
