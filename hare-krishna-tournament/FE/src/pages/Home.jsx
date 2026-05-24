@@ -11,7 +11,7 @@ const RANK_META = [
   { key: 'totalMaxNaamJaap', rank: 'Legend', emoji: '📿', color: '#9C27B0', glow: '#9C27B088', label: 'Naam Jaap Legend' },
 ]
 
-function WinnerCard({ meta, week, index }) {
+function WinnerCard({ meta, week, index, showName = true }) {
   const [visible, setVisible] = useState(false)
   useEffect(() => {
     const t = setTimeout(() => setVisible(true), 400 + index * 250)
@@ -29,10 +29,10 @@ function WinnerCard({ meta, week, index }) {
     >
       <div className="winner-medal">{meta.emoji}</div>
       <div className="winner-rank" style={{ color: meta.color }}>{meta.rank}</div>
-      {declared && name
+      {showName && (declared && name
         ? <div className="winner-name">{name}</div>
         : <div className="winner-tbd">To be announced</div>
-      }
+      )}
       <div className="winner-label">{week?.prizePool?.[meta.key]?.title || meta.label}</div>
       {prize > 0 && (
         <div className="winner-prize">
@@ -276,26 +276,22 @@ export default function Home() {
             {/* TOP — Overall Weekly Score (same table as in day-wise stats) */}
             <OverallScoreBlock stats={stats} />
 
-            {/* BOTTOM — Winners */}
-            <div className="col-winners col-winners--row">
-              <div className="winner-crown">👑</div>
-              <h2 className="winner-heading">
-                {latestWeek ? `Week ${latestWeek.keliKunjWeek} Winners!` : 'Be the Winners'}
-              </h2>
-              <p className="winner-sub">
-                {latestWeek
-                  ? 'By the grace of Shri Krishna the champions have emerged.'
-                  : 'Results will be revealed once declared by the admin.'}
-              </p>
-              <div className="winner-grid winner-grid--col">
-                {RANK_META.map((meta, i) => (
-                  <WinnerCard key={meta.key} meta={meta} week={latestWeek} index={i} />
-                ))}
+            {/* BOTTOM — Winners (only shown when result is declared) */}
+            {activeWeek?.resultDeclared && (
+              <div className="col-winners col-winners--row">
+                <div className="winner-crown">👑</div>
+                <h2 className="winner-heading">Week {activeWeek.keliKunjWeek} Winners!</h2>
+                <p className="winner-sub">By the grace of Shri Krishna the champions have emerged.</p>
+                <div className="winner-grid winner-grid--col">
+                  {RANK_META.map((meta, i) => (
+                    <WinnerCard key={meta.key} meta={meta} week={activeWeek} index={i} showName={false} />
+                  ))}
+                </div>
+                <p className="winner-blessing">
+                  🙏 Hare Krishna blessings be with you 🙏
+                </p>
               </div>
-              <p className="winner-blessing">
-                🙏 Hare Krishna blessings be with you 🙏
-              </p>
-            </div>
+            )}
 
           </div>
         ) : (
