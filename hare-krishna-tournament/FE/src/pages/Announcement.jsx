@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axiosClient from '../api/axiosClient'
+import { getWeekTitle } from '../utils/weekTitle'
 
 const PRIZE_META = [
   { key: '_1',               emoji: '🥇', color: '#FFD700', glow: '#FFD70088', fallback: 'Champion'         },
@@ -82,7 +83,7 @@ export default function Announcement() {
 
           <div className="final-day-badge">
             <span className="fire">🔥</span>
-            <span>{latestWeek ? `Week ${latestWeek.keliKunjWeek}` : 'KeliKunj'}</span>
+            <span>{getWeekTitle(latestWeek?.keliKunjWeek)}</span>
             <span className="fire">🔥</span>
           </div>
 

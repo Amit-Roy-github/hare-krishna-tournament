@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getKeliKunjList } from '../api/keliKunjApi'
+import { getWeekTitle } from '../utils/weekTitle'
 
 // ── Confetti particle ────────────────────────────
 function Confetti({ count = 60 }) {
@@ -54,7 +55,7 @@ function WeekCard({ week, index }) {
       {/* week header */}
       <div className="kk-week-header">
         <span className="kk-week-crown">{declared ? '👑' : '⏳'}</span>
-        <h3 className="kk-week-title">Week {week.keliKunjWeek}</h3>
+        <h3 className="kk-week-title">{getWeekTitle(week.keliKunjWeek)}</h3>
         <span className={`kk-week-badge ${declared ? 'kk-week-badge--declared' : 'kk-week-badge--pending'}`}>
           {declared ? 'Result Declared' : 'Awaiting Result'}
         </span>

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axiosClient from '../api/axiosClient'
 import { getStats } from '../api/statsApi'
+import { getWeekTitle } from '../utils/weekTitle'
 
 const RANK_META = [
   { key: '_1',               rank: '1st', emoji: '🥇', color: '#FFD700', glow: '#FFD70088', label: 'Champion'         },
@@ -260,11 +261,7 @@ export default function Home() {
           </h1>
           <div className="final-day-badge">
             <span className="fire">🔥</span>
-            <span>
-              {activeWeek && activeWeek.keliKunjWeek < 2 && !activeWeek.resultDeclared
-                ? `Week ${activeWeek.keliKunjWeek}`
-                : 'FINALE'}
-            </span>
+            <span>{getWeekTitle(activeWeek?.keliKunjWeek)}</span>
             <span className="fire">🔥</span>
           </div>
         </div>
@@ -280,7 +277,7 @@ export default function Home() {
             {activeWeek?.resultDeclared && (
               <div className="col-winners col-winners--row">
                 <div className="winner-crown">👑</div>
-                <h2 className="winner-heading">Week {activeWeek.keliKunjWeek} Winners!</h2>
+                <h2 className="winner-heading">{getWeekTitle(activeWeek.keliKunjWeek)} Winners!</h2>
                 <p className="winner-sub">By the grace of Shri Krishna the champions have emerged.</p>
                 <div className="winner-grid winner-grid--col">
                   {RANK_META.map((meta, i) => (
