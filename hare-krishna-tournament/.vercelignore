@@ -1,0 +1,5 @@
+# Exclude the Android project from Vercel uploads.
+# Vercel only deploys the web app (FE/ → dist/ + api/*.js).
+# The Android source lives in the same repo for product cohesion
+# but has no role in the web deploy — uploading it just wastes bandwidth.
+android/

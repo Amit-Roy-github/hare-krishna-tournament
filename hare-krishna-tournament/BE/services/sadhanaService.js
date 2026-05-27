@@ -89,8 +89,18 @@ export async function buildStatsResponse() {
   const monday      = getWeekMonday();
   const today       = getDayStart();
 
-  // All sadhana records for this week
-  const sadhanas = await Sadhana.find({ date: { $gte: monday, $lte: today } }).lean();
+  // Two queries in parallel: this-week's per-day records, and the all-time
+  // total per contestant (one aggregation pass instead of N queries).
+  const [sadhanas, lifetimeAgg] = await Promise.all([
+    Sadhana.find({ date: { $gte: monday, $lte: today } }).lean(),
+    Sadhana.aggregate([
+      { $group: { _id: '$krishnadasId', total: { $sum: '$naamJaapCount' } } },
+    ]),
+  ]);
+
+  const lifetimeMap = Object.fromEntries(
+    lifetimeAgg.map(a => [a._id.toString(), a.total])
+  );
 
   // krishnadasId → dateKey → sadhana
   const sadhanaMap = {};
@@ -154,7 +164,14 @@ export async function buildStatsResponse() {
       maxDayNaamCount     = Math.max(maxDayNaamCount, s.naamJaapCount || 0);
     }
 
-    return { bhaktName: c.bhaktName, dayScores, totalScore, totalNaamCount, maxDayNaamCount };
+    return {
+      bhaktName: c.bhaktName,
+      dayScores,
+      totalScore,
+      totalNaamCount,
+      maxDayNaamCount,
+      lifetimeNaamCount: lifetimeMap[id] || 0,
+    };
   }).sort((a, b) => b.totalScore - a.totalScore);
 
   // Hero = max single-day naam count, Legend = max total naam count

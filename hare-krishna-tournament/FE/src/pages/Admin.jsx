@@ -5,12 +5,13 @@ import * as Switch                           from '@radix-ui/react-switch'
 import * as AlertDialog                      from '@radix-ui/react-alert-dialog'
 import * as Tooltip                          from '@radix-ui/react-tooltip'
 import * as Popover                          from '@radix-ui/react-popover'
-import { Pencil, Trash2, Check, X }         from 'lucide-react'
+import { Pencil, Trash2, Check, X, LogOut } from 'lucide-react'
 import { getScores, updateScores }           from '../api/sadhanaApi'
 import { getKrishnaDasList, createKrishnaDas,
          updateKrishnaDas, deleteKrishnaDas } from '../api/krishnaDasApi'
 import { getKeliKunjList, createKeliKunj,
          updateKeliKunj }                    from '../api/keliKunjApi'
+import { TOKEN_KEY, BHAKT_KEY, ROLE_KEY }   from '../api/axiosClient'
 
 // ── Constants ────────────────────────────────────
 const EMPTY_USER = { bhaktName: '', email: '', phone: '', sansarName: '' }
@@ -342,10 +343,13 @@ function KrishnaDasList({ users, onRefresh }) {
   const startEdit = (u) => {
     setEditId(u._id)
     setEditForm({
-      sansarName:          u.sansarName || '',
-      email:               u.email      || '',
-      phone:               u.phone      || '',
+      sansarName:        u.sansarName || '',
+      email:             u.email      || '',
+      phone:             u.phone      || '',
       includeInKeliKunj: u.includeInKeliKunj, // exact DB value — no defaulting here
+      role:              u.auth?.role || 'contestant',
+      newPassword:       '',
+      hasPassword:       !!u.auth?.passwordSetAt,
     })
   }
 
@@ -353,10 +357,18 @@ function KrishnaDasList({ users, onRefresh }) {
 
   const saveEdit = async (id) => {
     try {
-      await updateKrishnaDas(id, editForm)
+      const { newPassword, hasPassword, ...rest } = editForm
+      const payload = { ...rest }
+      if (newPassword && newPassword.length >= 6) {
+        payload.password = newPassword
+      } else if (newPassword && newPassword.length > 0) {
+        toast.error('Password must be at least 6 characters')
+        return
+      }
+      await updateKrishnaDas(id, payload)
       setEditId(null)
       onRefresh()
-      toast.success('Updated successfully!')
+      toast.success(newPassword ? 'Updated — password set' : 'Updated successfully!')
     } catch (err) {
       toast.error(err.response?.data?.error || 'Update failed')
     }
@@ -445,6 +457,31 @@ function KrishnaDasList({ users, onRefresh }) {
                       </Tooltip.Trigger>
                       <Tooltip.Content className="tooltip-content" sideOffset={5}>Cancel</Tooltip.Content>
                     </Tooltip.Root>
+                  </div>
+
+                  {/* Auth row — spans full width below the main edit row */}
+                  <div className="kl-row" style={{ gridColumn: '1 / -1', background: 'transparent', padding: '0.5rem 0 0 0', borderBottom: 'none' }}>
+                    <span className="admin-field-label" style={{ alignSelf: 'center' }}>
+                      🔐 {editForm.hasPassword ? 'Reset password' : 'Set password'}
+                    </span>
+                    <input
+                      className="admin-input"
+                      type="password"
+                      placeholder={editForm.hasPassword ? '(leave blank to keep current)' : 'Min 6 characters'}
+                      autoComplete="new-password"
+                      value={editForm.newPassword}
+                      onChange={e => setEditForm(p => ({ ...p, newPassword: e.target.value }))}
+                    />
+                    <span className="admin-field-label" style={{ alignSelf: 'center' }}>Role</span>
+                    <select
+                      className="admin-input"
+                      value={editForm.role}
+                      onChange={e => setEditForm(p => ({ ...p, role: e.target.value }))}
+                    >
+                      <option value="contestant">Contestant</option>
+                      <option value="admin">Admin</option>
+                    </select>
+                    <span />
                   </div>
                 </>
               ) : (
@@ -755,6 +792,7 @@ export default function Admin() {
   const [scores,       setScores]       = useState([])
   const [users,        setUsers]        = useState([])
   const [keliKunjList, setKeliKunjList] = useState([])
+  const [authChecked,  setAuthChecked]  = useState(false)
 
   const loadScores    = async () => { try { const { data } = await getScores();         setScores(data)       } catch {} }
   const loadUsers     = async () => { try { const { data } = await getKrishnaDasList(); setUsers(data)        } catch {} }
@@ -762,7 +800,26 @@ export default function Admin() {
 
   const refresh = () => { loadScores(); loadUsers(); loadKeliKunj() }
 
-  useEffect(() => { refresh() }, [])
+  // Auth guard — must be admin to view this page
+  useEffect(() => {
+    const token = localStorage.getItem(TOKEN_KEY)
+    const role  = localStorage.getItem(ROLE_KEY)
+    if (!token || role !== 'admin') {
+      navigate('/admin-login', { replace: true })
+      return
+    }
+    setAuthChecked(true)
+    refresh()
+  }, [])
+
+  const handleLogout = () => {
+    localStorage.removeItem(TOKEN_KEY)
+    localStorage.removeItem(BHAKT_KEY)
+    localStorage.removeItem(ROLE_KEY)
+    navigate('/admin-login', { replace: true })
+  }
+
+  if (!authChecked) return null
 
   return (
     <div className="root">
@@ -781,9 +838,19 @@ export default function Admin() {
           <span className="lotus">🪷</span>
         </div>
 
-        <h1 className="tournament-title" style={{ fontSize: '2rem', marginBottom: '2rem' }}>
-          Admin <span className="title-highlight">Dashboard</span>
-        </h1>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+          <h1 className="tournament-title" style={{ fontSize: '2rem', margin: 0 }}>
+            Admin <span className="title-highlight">Dashboard</span>
+          </h1>
+          <button
+            className="nav-btn"
+            onClick={handleLogout}
+            title={`Signed in as ${localStorage.getItem(BHAKT_KEY) || ''}`}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
+          >
+            <LogOut size={14} /> Log out
+          </button>
+        </div>
 
         <RegisterSection onCreated={refresh} />
 

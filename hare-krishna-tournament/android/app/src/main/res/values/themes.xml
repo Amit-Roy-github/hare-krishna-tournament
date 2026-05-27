@@ -1,0 +1,11 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!--
+      XML theme is intentionally minimal — only what the platform reads before
+      Compose takes over: window/system bars, no action bar, edge-to-edge.
+      All actual theming lives in ui/theme/Theme.kt (HareKrishnaTheme).
+    -->
+    <style name="Theme.HareKrishna" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+    </style>
+</resources>
