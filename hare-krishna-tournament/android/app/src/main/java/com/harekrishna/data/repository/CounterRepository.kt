@@ -116,10 +116,11 @@ class CounterRepository(
 
             _state.update {
                 it.copy(
-                    todayServer = todayServer ?: it.todayServer,
-                    isSyncing   = false,
-                    syncedAt    = System.currentTimeMillis(),
-                    error       = null,
+                    todayServer  = todayServer ?: it.todayServer,
+                    pendingCount = days.sumOf { d -> (d.dayTotal - d.daySynced).coerceAtLeast(0) },
+                    isSyncing    = false,
+                    syncedAt     = System.currentTimeMillis(),
+                    error        = null,
                 )
             }
             flush()
