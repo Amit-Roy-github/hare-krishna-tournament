@@ -5,6 +5,7 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.harekrishna.domain.util.TimeUtil
 import kotlinx.coroutines.flow.Flow
@@ -35,6 +36,16 @@ class UserPrefs(context: Context) {
         store.edit { it[TAP_ANYWHERE_ENABLED] = enabled }
     }
 
+    // ── Selected colour palette ─────────────────────
+    // Stored as the PaletteId name (a String) so this data-layer class stays
+    // free of any UI/theme types. The UI maps the name back to a palette.
+
+    val selectedPalette: Flow<String?> = store.data.map { it[SELECTED_PALETTE] }
+
+    suspend fun setSelectedPalette(id: String) {
+        store.edit { it[SELECTED_PALETTE] = id }
+    }
+
     // ── Today reset offset (client-side, server unchanged) ──
     // Stored per bhaktName so different users on the same device don't share.
     // Auto-clears at midnight UTC: the stored timestamp must be ≥ today's
@@ -61,6 +72,7 @@ class UserPrefs(context: Context) {
     private companion object {
         val BOUNCE_ENABLED            = booleanPreferencesKey("bounce_enabled")
         val TAP_ANYWHERE_ENABLED      = booleanPreferencesKey("tap_anywhere_enabled")
+        val SELECTED_PALETTE          = stringPreferencesKey("selected_palette")
         const val DEFAULT_BOUNCE         = true
         const val DEFAULT_TAP_ANYWHERE   = false
     }

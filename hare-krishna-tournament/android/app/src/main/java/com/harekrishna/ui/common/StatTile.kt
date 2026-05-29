@@ -1,4 +1,4 @@
-package com.harekrishna.ui.home.components
+package com.harekrishna.ui.common
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -13,6 +13,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.harekrishna.ui.util.formatThousands
 
+// Shared stat card — used by both the Counter page and the Home landing.
 @Composable
 fun StatTile(
     label:  String,

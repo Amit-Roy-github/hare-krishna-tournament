@@ -20,6 +20,12 @@ const SadhanaSchema = new mongoose.Schema(
     niyam1: niyamField,
     niyam2: niyamField,
     niyam3: niyamField,
+
+    // Per-device high-water marks for idempotent incremental sync from the
+    // Android app: { [deviceId]: { naamJaapCount: Number } }. The server adds
+    // (clientTotal - snapshot) to naamJaapCount and advances the snapshot, so
+    // retries can't double-count. Mixed (plain object) so deviceId keys are dynamic.
+    deviceSnapshots: { type: mongoose.Schema.Types.Mixed, default: {} },
   },
   {
     collection: 'sadhana',

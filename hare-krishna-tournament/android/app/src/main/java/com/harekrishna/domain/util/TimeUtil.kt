@@ -1,6 +1,8 @@
 package com.harekrishna.domain.util
 
+import java.text.SimpleDateFormat
 import java.util.Calendar
+import java.util.Locale
 import java.util.TimeZone
 
 object TimeUtil {
@@ -13,5 +15,12 @@ object TimeUtil {
         cal.set(Calendar.SECOND,      0)
         cal.set(Calendar.MILLISECOND, 0)
         return cal.timeInMillis
+    }
+
+    // "YYYY-MM-DD" in UTC — the day key the sync API attributes counts to.
+    fun todayKeyUtc(): String {
+        val fmt = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+        fmt.timeZone = TimeZone.getTimeZone("UTC")
+        return fmt.format(todayStartUtcMs())
     }
 }

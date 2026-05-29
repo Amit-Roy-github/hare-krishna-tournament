@@ -1,20 +1,24 @@
 package com.harekrishna.domain.model
 
-// Source of truth for the counter UI.
-//   display today = max(0, serverBaseline + sessionDelta - todayResetOffset)
-// The offset is a client-only display tweak — the server retains the true
-// cumulative count. weekTotal / lifetimeTotal always show server truth.
+// Source of truth for the counter UI under the device-snapshot sync model.
+//
+//   displayCount  — the big on-screen number: a continuous personal counter
+//                   that only the user's Reset zeroes (never midnight).
+//   todayServer / weekTotal / lifetimeTotal — server truth, shown in the tiles.
+//   hasPending    — there are taps not yet confirmed by the server.
+//
+// The per-day tap ledger (DayEntry list) lives in CounterRepository/CounterStore,
+// not here — the UI never needs it.
 data class CounterState(
-    val serverBaseline:   Int  = 0,    // last value the server confirmed for today
-    val sessionDelta:     Int  = 0,    // taps since last successful sync
-    val todayResetOffset: Int  = 0,    // local "hide everything before this point" offset
-    val weekTotal:        Int  = 0,    // Monday-to-today total (server)
-    val lifetimeTotal:    Int  = 0,    // all-time total (server)
-    val syncedAt:         Long? = null,
-    val isLoading:        Boolean = false,
-    val isSyncing:        Boolean = false,
-    val error:            String? = null,
+    val displayCount:  Int     = 0,
+    val todayServer:   Int     = 0,
+    val weekTotal:     Int     = 0,
+    val lifetimeTotal: Int     = 0,
+    val pendingCount:  Int     = 0,    // taps not yet confirmed by the server
+    val isLoading:     Boolean = false,
+    val isSyncing:     Boolean = false,
+    val error:         String? = null,
+    val syncedAt:      Long?   = null,
 ) {
-    val todayCount: Int get() = (serverBaseline + sessionDelta - todayResetOffset).coerceAtLeast(0)
-    val hasPending: Boolean   get() = sessionDelta > 0
+    val hasPending: Boolean get() = pendingCount > 0
 }

@@ -2,49 +2,39 @@ package com.harekrishna.ui.theme
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 
-private val DarkScheme = darkColorScheme(
-    primary          = Saffron,
-    onPrimary        = SaffronDeep,
-    secondary        = DevoPurple,
-    onSecondary      = WarmWhite,
-    tertiary         = FestiveGold,
-    onTertiary       = SaffronDeep,
-    background       = InkBlack,
-    onBackground     = WarmWhite,
-    surface          = Surface,
-    onSurface        = WarmWhite,
-    surfaceVariant   = SurfaceRaised,
-    onSurfaceVariant = MutedSand,
-    error            = ErrorRed,
-    onError          = WarmWhite,
-)
-
-private val LightScheme = lightColorScheme(
-    primary       = Saffron,
-    onPrimary     = SaffronDeep,
-    secondary     = DevoPurple,
-    onSecondary   = WarmWhite,
-    tertiary      = FestiveGold,
-    background    = WarmWhite,
-    onBackground  = InkBlack,
-    surface       = WarmWhite,
-    onSurface     = InkBlack,
-    error         = ErrorRed,
-)
-
-// Dark-first. We ignore the system setting in v1 — the design is tuned for
-// dark and the light scheme exists only as a safety net.
+// Dark-first. The color scheme is derived from the active AppPalette, so
+// switching palettes recolours the whole app. Gradient accents (counter, CTA)
+// read LocalAppPalette directly — see Palette.kt.
 @Composable
 fun HareKrishnaTheme(
-    darkTheme: Boolean = true,
+    palette: AppPalette = Palettes.default,
     content: @Composable () -> Unit,
 ) {
-    MaterialTheme(
-        colorScheme = if (darkTheme) DarkScheme else LightScheme,
-        typography  = AppTypography,
-        content     = content,
+    val scheme = darkColorScheme(
+        primary          = palette.primary.solid,
+        onPrimary        = palette.onPrimary,
+        secondary        = palette.secondary.solid,
+        onSecondary      = palette.text,
+        tertiary         = palette.tertiary,
+        onTertiary       = palette.onPrimary,
+        background       = palette.background,
+        onBackground     = palette.text,
+        surface          = palette.surface,
+        onSurface        = palette.text,
+        surfaceVariant   = palette.surfaceRaised,
+        onSurfaceVariant = palette.muted,
+        error            = ErrorRed,
+        onError          = palette.text,
     )
+
+    CompositionLocalProvider(LocalAppPalette provides palette) {
+        MaterialTheme(
+            colorScheme = scheme,
+            typography  = AppTypography,
+            content     = content,
+        )
+    }
 }

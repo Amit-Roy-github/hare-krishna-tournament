@@ -4,6 +4,8 @@ import com.harekrishna.data.remote.dto.ChangePasswordRequestDto
 import com.harekrishna.data.remote.dto.KrishnaDasDto
 import com.harekrishna.data.remote.dto.LoginRequestDto
 import com.harekrishna.data.remote.dto.LoginResponseDto
+import com.harekrishna.data.remote.dto.NaamSyncDto
+import com.harekrishna.data.remote.dto.NaamSyncResponseDto
 import com.harekrishna.data.remote.dto.ScoreDto
 import com.harekrishna.data.remote.dto.ScoreUpdateDto
 import com.harekrishna.data.remote.dto.StatsResponseDto
@@ -24,10 +26,14 @@ interface ApiService {
     @GET("scores")
     suspend fun getScores(): List<ScoreDto>
 
-    // Backend's upsertTodaySadhana does $set on naamJaapCount, so we POST
-    // the absolute target count (baseline + delta), not the increment.
+    // Legacy absolute write (admin / web). Kept for compatibility.
     @POST("scores")
     suspend fun updateScores(@Body updates: List<ScoreUpdateDto>): List<ScoreDto>
+
+    // Idempotent incremental sync: send per-day device high-water marks; the
+    // server adds only the new part. See BE/api/naam.js.
+    @POST("naam")
+    suspend fun syncNaam(@Body body: List<NaamSyncDto>): NaamSyncResponseDto
 
     @GET("stats")
     suspend fun getStats(): StatsResponseDto

@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import express              from 'express';
 import scores               from '../api/scores.js';
+import naam                 from '../api/naam.js';
 import krishnaDas           from '../api/krishnaDas.js';
 import keliKunj             from '../api/keliKunj.js';
 import stats                from '../api/stats.js';
@@ -16,6 +17,7 @@ app.use(express.json());
 const wrap = (handler) => (req, res) => handler(req, res);
 
 app.all('/api/scores',                wrap(scores));
+app.all('/api/naam',                  wrap(naam));
 app.all('/api/krishnaDas',            wrap(krishnaDas));
 app.all('/api/keliKunj',              wrap(keliKunj));
 app.all('/api/stats',                 wrap(stats));

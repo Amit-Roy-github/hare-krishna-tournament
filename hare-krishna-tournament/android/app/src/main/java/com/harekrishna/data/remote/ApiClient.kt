@@ -10,10 +10,9 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 
 object ApiClient {
-    // Local-dev base URL. To make this work on a physical phone, set up an
-    // ADB port-forward once:  `adb reverse tcp:3001 tcp:3001`
-    // For production, swap to "https://hare-krishna-tournament.vercel.app/api/".
-    private const val BASE_URL = "http://localhost:3001/api/"
+    // Production API. For local dev, swap to "http://localhost:3001/api/" and
+    // bridge a physical phone with `adb reverse tcp:3001 tcp:3001`.
+    private const val BASE_URL = "https://hare-krishna-tournament.vercel.app/api/"
 
     private val json = Json {
         ignoreUnknownKeys = true

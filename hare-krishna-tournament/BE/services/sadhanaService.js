@@ -10,6 +10,18 @@ function getDayStart(date = new Date()) {
   return d;
 }
 
+// Parse a client-supplied day key — "YYYY-MM-DD", epoch ms, or Date — to
+// midnight UTC. Falls back to today for missing/invalid input.
+function parseDayStart(date) {
+  if (date === undefined || date === null) return getDayStart();
+  const d = typeof date === 'number'
+    ? new Date(date)
+    : new Date(`${date}T00:00:00.000Z`);
+  if (Number.isNaN(d.getTime())) return getDayStart();
+  d.setUTCHours(0, 0, 0, 0);
+  return d;
+}
+
 // ── Upsert today's sadhana for one krishnadas ───
 // If a record exists for today → update it
 // If not → create a new one (one record per person per day)
@@ -28,6 +40,39 @@ export async function upsertTodaySadhana(krishnaDasId, fields) {
     { $set: set },
     { upsert: true, new: true, setDefaultsOnInsert: true }
   );
+}
+
+// ── Idempotent incremental naam sync (Android app) ──
+// The client sends its absolute per-day device total (a high-water mark). We
+// add only the new part — max(0, total - storedSnapshot) — to naamJaapCount and
+// advance the snapshot, all in one atomic single-document update. Because a
+// retry re-sends the same total, the second pass computes a diff of 0, so it
+// can never double-count. Different devices use different snapshot keys, and
+// naamJaapCount accumulates across them.
+export async function applyDeviceCount(krishnaDasId, deviceId, date, total) {
+  const day       = parseDayStart(date);
+  const safeTotal = Math.max(0, Math.floor(Number(total) || 0));
+  const snapPath  = `deviceSnapshots.${deviceId}.naamJaapCount`;
+
+  const updated = await Sadhana.findOneAndUpdate(
+    { krishnadasId: krishnaDasId, date: day },
+    [
+      {
+        $set: {
+          naamJaapCount: {
+            $add: [
+              { $ifNull: ['$naamJaapCount', 0] },
+              { $max: [0, { $subtract: [safeTotal, { $ifNull: [`$${snapPath}`, 0] }] }] },
+            ],
+          },
+          [snapPath]: safeTotal,
+        },
+      },
+    ],
+    { upsert: true, new: true }
+  );
+
+  return updated.naamJaapCount;
 }
 
 // ── Get today's sadhana for all krishnadas ──────

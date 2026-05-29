@@ -1,4 +1,4 @@
-package com.harekrishna.ui.home.components
+package com.harekrishna.ui.counter.components
 
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -8,6 +8,7 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -53,7 +54,7 @@ fun SyncStatusBar(
         verticalAlignment    = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        androidx.compose.foundation.layout.Box(
+        Box(
             modifier = Modifier
                 .size(animatedDotSize.dp)
                 .clip(CircleShape)

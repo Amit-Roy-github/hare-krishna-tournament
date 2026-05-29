@@ -1,4 +1,4 @@
-package com.harekrishna.ui.home.components
+package com.harekrishna.ui.counter.components
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
@@ -17,14 +17,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.unit.dp
-import com.harekrishna.ui.theme.Saffron
-import com.harekrishna.ui.theme.SaffronDeep
+import com.harekrishna.ui.theme.CounterFill
+import com.harekrishna.ui.theme.LocalAppPalette
+import com.harekrishna.ui.theme.counterBrush
 import com.harekrishna.ui.util.formatThousands
 
 // Hero element — see android/DESIGN.md §"Counter button (the hero)".
-// `clickable` is false when tap-anywhere mode is on (HomeScreen wraps the
+// `clickable` is false when tap-anywhere mode is on (CounterScreen wraps the
 // whole area in its own tap detector). Haptic + viewModel.onTap() live in the
 // caller, not here — keeps this composable pure visual.
 @Composable
@@ -35,6 +35,7 @@ fun CounterButton(
     onTap:         () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val palette = LocalAppPalette.current
     val scale = remember { Animatable(1f) }
 
     LaunchedEffect(count, bounceEnabled) {
@@ -61,19 +62,14 @@ fun CounterButton(
             .size(280.dp)
             .scale(scale.value)
             .clip(CircleShape)
-            .background(
-                Brush.radialGradient(
-                    colors = listOf(Saffron, Saffron.copy(alpha = 0.78f)),
-                    radius = 600f,
-                )
-            )
+            .background(palette.counterBrush(CounterFill.GRADIENT))
             .then(clickModifier),
         contentAlignment = Alignment.Center,
     ) {
         Text(
             text  = count.formatThousands(),
             style = MaterialTheme.typography.displayLarge,
-            color = SaffronDeep,
+            color = palette.onPrimary,
         )
     }
 }

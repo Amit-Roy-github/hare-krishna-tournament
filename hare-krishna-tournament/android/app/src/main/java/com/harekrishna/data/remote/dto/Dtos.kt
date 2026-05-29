@@ -54,6 +54,29 @@ data class ScoreUpdateDto(
     val naamJaapCount: Int,
 )
 
+// ── Incremental naam sync (POST /api/naam) ──────
+// `total` is this device's absolute per-day high-water mark; the server adds
+// only the new part (total − its stored snapshot), so retries can't double-count.
+
+@Serializable
+data class NaamSyncDto(
+    val deviceId: String,
+    val date:     String,   // "YYYY-MM-DD" UTC — the day these chants belong to
+    val total:    Int,      // device's cumulative count for that day
+)
+
+@Serializable
+data class NaamSyncResponseDto(
+    val days:   List<NaamSyncDayDto> = emptyList(),
+    val scores: List<ScoreDto>       = emptyList(),
+)
+
+@Serializable
+data class NaamSyncDayDto(
+    val date:          String? = null,
+    val naamJaapCount: Int     = 0,
+)
+
 @Serializable
 data class StatsResponseDto(
     val overall: List<OverallStatDto> = emptyList(),
