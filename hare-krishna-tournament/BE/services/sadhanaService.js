@@ -69,7 +69,8 @@ export async function applyDeviceCount(krishnaDasId, deviceId, date, total) {
         },
       },
     ],
-    { upsert: true, new: true }
+    // Mongoose 9 requires explicit opt-in to treat the array as a pipeline.
+    { upsert: true, new: true, updatePipeline: true }
   );
 
   return updated.naamJaapCount;
