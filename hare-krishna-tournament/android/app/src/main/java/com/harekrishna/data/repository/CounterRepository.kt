@@ -33,17 +33,23 @@ class CounterRepository(
 
     suspend fun loadInitial() {
         val bhaktName = bhakt() ?: return
-        _state.update { it.copy(isLoading = true, error = null) }
 
-        // Local first — display shows instantly, even offline.
-        if (deviceId.isEmpty()) deviceId = store.deviceId()
-        displayCount = store.getDisplayCount(bhaktName)
-        days.clear()
-        days.addAll(store.getDays(bhaktName))
-        loadedFor = bhaktName
-        emit()
+        // Hydrate local state ONCE per user (or after a process restart). The
+        // in-memory repo is the source of truth afterwards, so re-entering the
+        // screen never reloads from disk and never erases the live count.
+        if (loadedFor != bhaktName) {
+            if (deviceId.isEmpty()) deviceId = store.deviceId()
+            displayCount = store.getDisplayCount(bhaktName)
+            days.clear()
+            days.addAll(store.getDays(bhaktName))
+            loadedFor = bhaktName
+            emit()
+        }
 
-        // Then reconcile the server-truth tiles.
+        // Refresh server-truth tiles in the background. The counter itself runs
+        // entirely offline from local state — a failed fetch only leaves the
+        // tiles stale; it never blocks the counter or clears the count.
+        _state.update { it.copy(isLoading = true) }
         runCatching {
             val scores  = api.getScores()
             val stats   = api.getStats()
@@ -60,12 +66,12 @@ class CounterRepository(
                     weekTotal     = week,
                     lifetimeTotal = lifetime,
                     isLoading     = false,
-                    error         = null,
                     syncedAt      = System.currentTimeMillis(),
                 )
             }
         }.onFailure {
-            _state.update { it.copy(isLoading = false, error = "Couldn't load — pull to retry") }
+            // Offline / fetch failed — keep the local count and stale tiles.
+            _state.update { it.copy(isLoading = false) }
         }
     }
 

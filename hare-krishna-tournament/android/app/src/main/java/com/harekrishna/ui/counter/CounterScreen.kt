@@ -16,7 +16,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -147,16 +146,14 @@ fun CounterScreen(
                 ),
             contentAlignment = Alignment.Center,
         ) {
-            if (state.isLoading && state.displayCount == 0) {
-                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-            } else {
-                CounterButton(
-                    count         = state.displayCount,
-                    bounceEnabled = state.bounceEnabled,
-                    clickable     = !state.tapAnywhereEnabled,
-                    onTap         = onCounterTap,
-                )
-            }
+            // Always render from local state — the counter works offline; the
+            // server fetch only updates the tiles, it must never gate the count.
+            CounterButton(
+                count         = state.displayCount,
+                bounceEnabled = state.bounceEnabled,
+                clickable     = !state.tapAnywhereEnabled,
+                onTap         = onCounterTap,
+            )
         }
 
         // ── Offer to Krishna ────────────────────
