@@ -11,6 +11,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 // Device-snapshot sync. Each tap bumps today's per-day high-water mark and the
 // continuous display counter. sync() sends each un-synced day's absolute total;
@@ -29,6 +31,12 @@ class CounterRepository(
     private var displayCount: Int    = 0
     private val days = mutableListOf<DayEntry>()
 
+    // Serializes sync() calls. Without this, every tap above the 108 threshold
+    // spawns a parallel POST with the same payload — wasting bandwidth, racing
+    // the snapshot on the server, and overloading the Vercel function until
+    // it times out.
+    private val syncMutex = Mutex()
+
     private fun bhakt(): String? = sessionPrefs.read()?.bhaktName
 
     suspend fun loadInitial() {
@@ -46,33 +54,27 @@ class CounterRepository(
             emit()
         }
 
-        // Refresh server-truth tiles in the background. The counter itself runs
-        // entirely offline from local state — a failed fetch only leaves the
-        // tiles stale; it never blocks the counter or clears the count.
+        // Refresh server-truth tiles in the background using the standalone
+        // per-user endpoint — NOT the leaderboard (`/api/scores`,`/api/stats`),
+        // which filters by `includeInKeliKunj` and would hide a user who isn't
+        // in the active tournament. The counter itself runs entirely offline
+        // from local state; a failed fetch only leaves the tiles stale.
         _state.update { it.copy(isLoading = true) }
-        runCatching {
-            val scores  = api.getScores()
-            val stats   = api.getStats()
-            val overall = stats.overall.firstOrNull { it.bhaktName == bhaktName }
-            Triple(
-                scores.firstOrNull { it.bhaktName == bhaktName }?.todayNaam ?: 0,
-                overall?.totalNaamCount    ?: 0,
-                overall?.lifetimeNaamCount ?: 0,
-            )
-        }.onSuccess { (today, week, lifetime) ->
-            _state.update {
-                it.copy(
-                    todayServer   = today,
-                    weekTotal     = week,
-                    lifetimeTotal = lifetime,
-                    isLoading     = false,
-                    syncedAt      = System.currentTimeMillis(),
-                )
+        runCatching { api.getMyStats() }
+            .onSuccess { stats ->
+                _state.update {
+                    it.copy(
+                        todayServer   = stats.todayNaam,
+                        weekTotal     = stats.weekTotal,
+                        lifetimeTotal = stats.lifetimeNaam,
+                        isLoading     = false,
+                        syncedAt      = System.currentTimeMillis(),
+                    )
+                }
             }
-        }.onFailure {
-            // Offline / fetch failed — keep the local count and stale tiles.
-            _state.update { it.copy(isLoading = false) }
-        }
+            .onFailure {
+                _state.update { it.copy(isLoading = false) }
+            }
     }
 
     // RAM-only — instant. Durability comes from flush()/sync().
@@ -92,20 +94,25 @@ class CounterRepository(
         store.setDays(bhaktName, days.toList())
     }
 
-    suspend fun sync(): Result<Unit> {
-        val bhaktName = bhakt() ?: return Result.failure(IllegalStateException("No session"))
+    // Mutex-guarded so concurrent triggers (per-tap threshold, debounce, leave,
+    // sign-out) can't pile up parallel POSTs of the same payload. If a sync is
+    // already in flight, additional callers wait their turn — they'll usually
+    // find pending=empty and short-circuit, since the in-flight one already
+    // covered the data.
+    suspend fun sync(): Result<Unit> = syncMutex.withLock {
+        val bhaktName = bhakt() ?: return@withLock Result.failure(IllegalStateException("No session"))
         if (deviceId.isEmpty()) deviceId = store.deviceId()
 
         val pending = days.filter { it.dayTotal > it.daySynced }
         if (pending.isEmpty()) {
             flush()
-            return Result.success(Unit)
+            return@withLock Result.success(Unit)
         }
 
         _state.update { it.copy(isSyncing = true, error = null) }
         val flushing = pending.map { it.date to it.dayTotal }   // snapshot what we send
 
-        return runCatching {
+        runCatching {
             api.syncNaam(flushing.map { (date, total) -> NaamSyncDto(deviceId, date, total) })
         }.onSuccess { resp ->
             // Advance each flushed day's synced mark to the total we sent. Taps
@@ -117,16 +124,21 @@ class CounterRepository(
             val today = TimeUtil.todayKeyUtc()
             days.removeAll { it.date < today && it.dayTotal == it.daySynced }
 
+            // Prefer the per-day naamJaapCount the server echoed back for
+            // today; fall back to the user's own stats block. Both are this
+            // user only — no leaderboard data anywhere in this path.
             val todayServer = resp.days.firstOrNull { it.date == today }?.naamJaapCount
-                ?: resp.scores.firstOrNull { it.bhaktName == bhaktName }?.todayNaam
+                ?: resp.stats?.todayNaam
 
             _state.update {
                 it.copy(
-                    todayServer  = todayServer ?: it.todayServer,
-                    pendingCount = days.sumOf { d -> (d.dayTotal - d.daySynced).coerceAtLeast(0) },
-                    isSyncing    = false,
-                    syncedAt     = System.currentTimeMillis(),
-                    error        = null,
+                    todayServer   = todayServer       ?: it.todayServer,
+                    weekTotal     = resp.stats?.weekTotal    ?: it.weekTotal,
+                    lifetimeTotal = resp.stats?.lifetimeNaam ?: it.lifetimeTotal,
+                    pendingCount  = days.sumOf { d -> (d.dayTotal - d.daySynced).coerceAtLeast(0) },
+                    isSyncing     = false,
+                    syncedAt      = System.currentTimeMillis(),
+                    error         = null,
                 )
             }
             flush()

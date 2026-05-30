@@ -8,6 +8,7 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
+import java.util.concurrent.TimeUnit
 
 object ApiClient {
     // Production API. For local dev, swap to "http://localhost:3001/api/" and
@@ -21,6 +22,11 @@ object ApiClient {
 
     fun create(sessionPrefs: SessionPrefs): ApiService {
         val client = OkHttpClient.Builder()
+            // Vercel cold-starts + a long sync payload can take ~10–20s; the
+            // default 10s socket timeout was bailing on every /api/naam call.
+            .connectTimeout(15, TimeUnit.SECONDS)
+            .readTimeout   (30, TimeUnit.SECONDS)
+            .writeTimeout  (30, TimeUnit.SECONDS)
             .addInterceptor(authInterceptor(sessionPrefs))
             .addInterceptor(HttpLoggingInterceptor().apply {
                 level = HttpLoggingInterceptor.Level.BASIC

@@ -1,7 +1,7 @@
-import connectDB                                  from '../DB/connection.js';
-import { findByBhaktName }                        from '../services/krishnaDasService.js';
-import { applyDeviceCount, buildScoresResponse }  from '../services/sadhanaService.js';
-import { requireAuth }                            from '../middleware/auth.js';
+import connectDB                                    from '../DB/connection.js';
+import { findByBhaktName }                          from '../services/krishnaDasService.js';
+import { applyDeviceCount, getKrishnaDasStats }     from '../services/sadhanaService.js';
+import { requireAuth }                              from '../middleware/auth.js';
 
 // POST /api/naam — idempotent incremental naam-jaap sync from the app.
 // Body: a single { deviceId, date, total } or an array of them (one per
@@ -19,17 +19,20 @@ const sync = requireAuth(async (req, res) => {
   }
 
   const items = Array.isArray(req.body) ? req.body : [req.body];
-  const days  = [];
-  for (const item of items) {
-    if (!item || !item.deviceId) continue;
-    const naamJaapCount = await applyDeviceCount(
-      krishnaDas._id, item.deviceId, item.date, item.total,
-    );
-    days.push({ date: item.date, naamJaapCount });
-  }
+  const valid = items.filter(it => it && it.deviceId);
 
-  const scores = await buildScoresResponse();
-  return res.json({ days, scores });
+  const results = await Promise.all(
+    valid.map(it =>
+      applyDeviceCount(krishnaDas._id, it.deviceId, it.date, it.total)
+        .then(naamJaapCount => ({ date: it.date, naamJaapCount }))
+    )
+  );
+
+  // Return only THIS user's stats — never the leaderboard. The Android
+  // client displays its own numbers from here; the leaderboard is its own
+  // endpoint and its own filter (active contestants only).
+  const stats = await getKrishnaDasStats(krishnaDas._id);
+  return res.json({ days: results, stats });
 });
 
 export default async function handler(req, res) {

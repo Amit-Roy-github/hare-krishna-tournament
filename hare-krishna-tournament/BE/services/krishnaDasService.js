@@ -45,7 +45,7 @@ export async function updateKrishnaDas(id, fields) {
     set['auth.passwordHash']  = await hashPassword(fields.password);
     set['auth.passwordSetAt'] = new Date();
   }
-  return KrishnaDas.findByIdAndUpdate(id, { $set: set }, { new: true })
+  return KrishnaDas.findByIdAndUpdate(id, { $set: set }, { returnDocument: 'after' })
     .select(PUBLIC_SELECT)
     .lean();
 }

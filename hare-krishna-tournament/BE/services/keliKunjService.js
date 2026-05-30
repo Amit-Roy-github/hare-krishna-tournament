@@ -32,6 +32,6 @@ export async function updateKeliKunj(id, { winners, prizePool, resultDeclared, s
   return KeliKunj.findByIdAndUpdate(
     id,
     { $set: set },
-    { new: true }
+    { returnDocument: 'after' }
   ).lean();
 }

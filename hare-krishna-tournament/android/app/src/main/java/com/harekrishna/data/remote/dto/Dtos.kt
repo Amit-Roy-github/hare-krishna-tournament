@@ -67,8 +67,19 @@ data class NaamSyncDto(
 
 @Serializable
 data class NaamSyncResponseDto(
-    val days:   List<NaamSyncDayDto> = emptyList(),
-    val scores: List<ScoreDto>       = emptyList(),
+    val days:  List<NaamSyncDayDto> = emptyList(),
+    val stats: KrishnaDasStatsDto?  = null,
+)
+
+// ── Per-user stats (GET /api/krishnaDasStats and embedded in /api/naam) ──
+// Standalone, NOT the leaderboard. No `includeInKeliKunj` filter — every
+// signed-in user gets their own today / week / lifetime even if they aren't
+// in the active tournament.
+@Serializable
+data class KrishnaDasStatsDto(
+    val todayNaam:    Int = 0,
+    val weekTotal:    Int = 0,
+    val lifetimeNaam: Int = 0,
 )
 
 @Serializable

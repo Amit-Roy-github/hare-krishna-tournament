@@ -67,11 +67,6 @@ class CounterViewModel(
         }
     }
 
-    // "Send count to Krishna" — explicit immediate offer.
-    fun offerToKrishna() = viewModelScope.launch {
-        counterRepository.sync()
-    }
-
     // Flush local state + best-effort sync when the screen is backgrounded, so
     // leaving the app sends the count without waiting for the 5-min window.
     fun onLeave() = viewModelScope.launch {

@@ -2,6 +2,7 @@ package com.harekrishna.data.remote
 
 import com.harekrishna.data.remote.dto.ChangePasswordRequestDto
 import com.harekrishna.data.remote.dto.KrishnaDasDto
+import com.harekrishna.data.remote.dto.KrishnaDasStatsDto
 import com.harekrishna.data.remote.dto.LoginRequestDto
 import com.harekrishna.data.remote.dto.LoginResponseDto
 import com.harekrishna.data.remote.dto.NaamSyncDto
@@ -35,6 +36,13 @@ interface ApiService {
     @POST("naam")
     suspend fun syncNaam(@Body body: List<NaamSyncDto>): NaamSyncResponseDto
 
+    // Tournament-wide stats (leaderboard breakdown). Filtered by active
+    // contestants. Don't use this for a single user's display.
     @GET("stats")
     suspend fun getStats(): StatsResponseDto
+
+    // Signed-in user's own today / week / lifetime — NOT the leaderboard.
+    // Use this anywhere the UI shows the current user's numbers.
+    @GET("krishnaDasStats")
+    suspend fun getMyStats(): KrishnaDasStatsDto
 }

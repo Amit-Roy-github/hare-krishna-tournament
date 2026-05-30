@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -19,7 +20,6 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
@@ -42,6 +42,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.harekrishna.ui.common.GlassIconChip
 import com.harekrishna.ui.common.StatTile
 import com.harekrishna.ui.theme.LocalAppPalette
 import com.harekrishna.ui.theme.PaletteId
@@ -82,19 +83,18 @@ fun HomeScreen(
                 )
         )
 
-        // Settings (top-right) — switches the colour palette.
-        IconButton(
-            onClick  = { showPalettePicker = true },
-            modifier = Modifier
+        // Settings (top-right) — premium glass chip switches the colour palette.
+        // statusBarsPadding() drops it clear of the system bar so it never
+        // crowds the battery/clock icons on edge-to-edge devices.
+        GlassIconChip(
+            icon               = Icons.Filled.Settings,
+            contentDescription = "Theme colour settings",
+            onClick            = { showPalettePicker = true },
+            modifier           = Modifier
                 .align(Alignment.TopEnd)
-                .padding(horizontal = 16.dp, vertical = 20.dp),
-        ) {
-            Icon(
-                imageVector        = Icons.Filled.Settings,
-                contentDescription = "Theme colour settings",
-                tint               = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
+                .statusBarsPadding()
+                .padding(top = 12.dp, end = 16.dp),
+        )
 
         // Greeting + stats + CTA, vertically centered.
         Column(

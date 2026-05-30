@@ -1,6 +1,7 @@
 package com.harekrishna.ui.counter
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -12,12 +13,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -29,20 +31,20 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.harekrishna.ui.common.GlassIconChip
 import com.harekrishna.ui.common.StatTile
 import com.harekrishna.ui.counter.components.CounterButton
 import com.harekrishna.ui.counter.components.SettingsSheet
 import com.harekrishna.ui.counter.components.SyncStatusBar
 import com.harekrishna.ui.theme.LocalAppPalette
-import com.harekrishna.ui.theme.linear
 
 @Composable
 fun CounterScreen(
@@ -71,6 +73,7 @@ fun CounterScreen(
     var showSettings by remember { mutableStateOf(false) }
     val haptic = LocalHapticFeedback.current
     val tapAnywhereSource = remember { MutableInteractionSource() }
+    val accent = LocalAppPalette.current
 
     val onCounterTap: () -> Unit = {
         viewModel.onTap()
@@ -80,46 +83,84 @@ fun CounterScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = 24.dp, vertical = 16.dp),
+            .statusBarsPadding()
+            .padding(horizontal = 20.dp, vertical = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         // ── Header: back + bhaktName + settings ──
+        // Glass chips match Home's premium settings button and clear the
+        // status bar so they never crowd the system icons.
         Row(
             modifier              = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment     = Alignment.CenterVertically,
         ) {
-            IconButton(onClick = onBack) {
-                Icon(
-                    imageVector        = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Back",
-                    tint               = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
+            GlassIconChip(
+                icon               = Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = "Back",
+                onClick            = onBack,
+            )
             Text(
                 state.bhaktName.ifBlank { " " },
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onBackground,
             )
-            IconButton(onClick = { showSettings = true }) {
-                Icon(
-                    imageVector        = Icons.Filled.Settings,
-                    contentDescription = "Settings",
-                    tint               = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
+            GlassIconChip(
+                icon               = Icons.Filled.Settings,
+                contentDescription = "Settings",
+                onClick            = { showSettings = true },
+            )
         }
 
         Spacer(Modifier.height(16.dp))
 
-        // ── Stats (server truth) ────────────────
-        Row(
-            modifier              = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        // ── Stats card — server-truth tiles inside a labelled glass card ──
+        // "Lalju server" makes it clear these numbers are what the server has,
+        // distinct from the personal display counter on the tap zone below.
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(24.dp))
+                .background(
+                    Brush.linearGradient(
+                        colors = listOf(
+                            accent.primary.solid.copy(alpha = 0.10f),
+                            accent.primary.solid.copy(alpha = 0.03f),
+                        )
+                    )
+                )
+                .border(
+                    width = 1.dp,
+                    color = accent.primary.solid.copy(alpha = 0.18f),
+                    shape = RoundedCornerShape(24.dp),
+                )
+                .padding(14.dp),
         ) {
-            StatTile(label = "Today",    value = state.todayServer,   modifier = Modifier.weight(1f))
-            StatTile(label = "Week",     value = state.weekTotal,     modifier = Modifier.weight(1f))
-            StatTile(label = "Lifetime", value = state.lifetimeTotal, modifier = Modifier.weight(1f))
+            Row(
+                modifier          = Modifier.padding(start = 4.dp, bottom = 10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(8.dp)
+                        .clip(CircleShape)
+                        .background(accent.primary.solid),
+                )
+                Spacer(Modifier.size(8.dp))
+                Text(
+                    "Lalju server",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            Row(
+                modifier              = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                StatTile(label = "Today",    value = state.todayServer,   modifier = Modifier.weight(1f))
+                StatTile(label = "Week",     value = state.weekTotal,     modifier = Modifier.weight(1f))
+                StatTile(label = "Lifetime", value = state.lifetimeTotal, modifier = Modifier.weight(1f))
+            }
         }
 
         Spacer(Modifier.height(12.dp))
@@ -155,13 +196,6 @@ fun CounterScreen(
                 onTap         = onCounterTap,
             )
         }
-
-        // ── Offer to Krishna ────────────────────
-        OfferButton(
-            pending   = state.pendingCount,
-            isSyncing = state.isSyncing,
-            onClick   = viewModel::offerToKrishna,
-        )
     }
 
     if (showSettings) {
@@ -173,40 +207,6 @@ fun CounterScreen(
             onResetToday        = viewModel::onResetToday,
             onSignOut           = viewModel::signOut,
             onDismiss           = { showSettings = false },
-        )
-    }
-}
-
-@Composable
-private fun OfferButton(
-    pending:   Int,
-    isSyncing: Boolean,
-    onClick:   () -> Unit,
-) {
-    val palette = LocalAppPalette.current
-    val enabled = pending > 0 && !isSyncing
-    val label = when {
-        isSyncing     -> "Offering…  🙏"
-        pending > 0   -> "Send to Krishna  ·  $pending"
-        else          -> "All offered  🙏"
-    }
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(50))
-            .then(
-                if (enabled) Modifier.background(palette.primary.linear())
-                else Modifier.background(MaterialTheme.colorScheme.surfaceVariant)
-            )
-            .clickable(enabled = enabled, onClick = onClick)
-            .padding(vertical = 16.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            text      = label,
-            color     = if (enabled) palette.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
-            style     = MaterialTheme.typography.titleMedium,
-            textAlign = TextAlign.Center,
         )
     }
 }

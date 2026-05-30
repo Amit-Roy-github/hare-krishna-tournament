@@ -38,21 +38,42 @@ export async function upsertTodaySadhana(krishnaDasId, fields) {
   return Sadhana.findOneAndUpdate(
     { krishnadasId: krishnaDasId, date: today },
     { $set: set },
-    { upsert: true, new: true, setDefaultsOnInsert: true }
+    { upsert: true, returnDocument: 'after', setDefaultsOnInsert: true }
   );
 }
 
 // ── Idempotent incremental naam sync (Android app) ──
-// The client sends its absolute per-day device total (a high-water mark). We
-// add only the new part — max(0, total - storedSnapshot) — to naamJaapCount and
-// advance the snapshot, all in one atomic single-document update. Because a
-// retry re-sends the same total, the second pass computes a diff of 0, so it
-// can never double-count. Different devices use different snapshot keys, and
-// naamJaapCount accumulates across them.
+// Per-device high-water mark. The client sends its absolute per-day device
+// total; the server adds only the new part — max(0, total - storedSnapshot) —
+// to naamJaapCount and advances the snapshot to MAX(storedSnapshot, total).
+// The snapshot is monotonic by design, so out-of-order or retried POSTs can
+// never drag it down and double-credit on the next sync. All of this happens
+// in one atomic single-document update.
+const SUSPICIOUS_DIFF = 5000;
 export async function applyDeviceCount(krishnaDasId, deviceId, date, total) {
   const day       = parseDayStart(date);
   const safeTotal = Math.max(0, Math.floor(Number(total) || 0));
   const snapPath  = `deviceSnapshots.${deviceId}.naamJaapCount`;
+
+  // Inspect the snapshot BEFORE the update so we can log a warning if this
+  // single call would credit an implausible diff (defense in depth — the
+  // update math itself stays unchanged and still applies the full diff).
+  const before = await Sadhana.findOne(
+    { krishnadasId: krishnaDasId, date: day },
+    { [snapPath]: 1 },
+  ).lean();
+  const beforeSnap = before
+    ? (before.deviceSnapshots?.[deviceId]?.naamJaapCount ?? 0)
+    : 0;
+  const diff = Math.max(0, safeTotal - beforeSnap);
+  console.log(`[applyDeviceCount] diff=${diff} (krishnaDasId=${krishnaDasId} device=${deviceId} date=${day.toISOString().slice(0,10)} total=${safeTotal} snap=${beforeSnap})`)
+  if (diff > SUSPICIOUS_DIFF) {
+    console.warn(
+      `[applyDeviceCount] suspicious diff=${diff} ` +
+      `(krishnaDasId=${krishnaDasId} device=${deviceId} ` +
+      `date=${day.toISOString().slice(0,10)} total=${safeTotal} snap=${beforeSnap})`
+    );
+  }
 
   const updated = await Sadhana.findOneAndUpdate(
     { krishnadasId: krishnaDasId, date: day },
@@ -65,15 +86,45 @@ export async function applyDeviceCount(krishnaDasId, deviceId, date, total) {
               { $max: [0, { $subtract: [safeTotal, { $ifNull: [`$${snapPath}`, 0] }] }] },
             ],
           },
-          [snapPath]: safeTotal,
+          // MONOTONIC: snapshot can only move up. A late stale POST with a
+          // smaller safeTotal becomes a no-op here. This is the rule the rest
+          // of the design rests on.
+          [snapPath]: { $max: [ { $ifNull: [`$${snapPath}`, 0] }, safeTotal ] },
         },
       },
     ],
     // Mongoose 9 requires explicit opt-in to treat the array as a pipeline.
-    { upsert: true, new: true, updatePipeline: true }
+    { upsert: true, returnDocument: 'after', updatePipeline: true }
   );
 
   return updated.naamJaapCount;
+}
+
+// ── Standalone per-user stats (Android app, profile views, etc.) ──
+// NOT the leaderboard. Returns one contestant's own today / week / lifetime
+// totals, with no `includeInKeliKunj` filter — every signed-in user can see
+// their own numbers even if they're not in the active tournament.
+export async function getKrishnaDasStats(krishnaDasId) {
+  const today  = getDayStart();
+  const monday = getWeekMonday();
+
+  const [todayDoc, weekAgg, lifetimeAgg] = await Promise.all([
+    Sadhana.findOne({ krishnadasId: krishnaDasId, date: today }).lean(),
+    Sadhana.aggregate([
+      { $match: { krishnadasId: krishnaDasId, date: { $gte: monday, $lte: today } } },
+      { $group: { _id: null, total: { $sum: '$naamJaapCount' } } },
+    ]),
+    Sadhana.aggregate([
+      { $match: { krishnadasId: krishnaDasId } },
+      { $group: { _id: null, total: { $sum: '$naamJaapCount' } } },
+    ]),
+  ]);
+
+  return {
+    todayNaam:    todayDoc?.naamJaapCount  ?? 0,
+    weekTotal:    weekAgg[0]?.total        ?? 0,
+    lifetimeNaam: lifetimeAgg[0]?.total    ?? 0,
+  };
 }
 
 // ── Get today's sadhana for all krishnadas ──────
