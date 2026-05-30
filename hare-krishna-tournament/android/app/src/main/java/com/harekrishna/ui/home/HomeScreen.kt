@@ -2,7 +2,6 @@ package com.harekrishna.ui.home
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -16,14 +15,9 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -38,15 +32,17 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.harekrishna.ui.common.GlassIconChip
-import com.harekrishna.ui.common.StatTile
+import com.harekrishna.ui.common.ServerStatsCard
+import com.harekrishna.ui.common.StatusDot
+import com.harekrishna.ui.home.components.ChangePasswordDialog
+import com.harekrishna.ui.home.components.HomeSettingsSheet
 import com.harekrishna.ui.theme.LocalAppPalette
-import com.harekrishna.ui.theme.PaletteId
-import com.harekrishna.ui.theme.Palettes
 import com.harekrishna.ui.theme.linear
 
 @Composable
@@ -67,7 +63,8 @@ fun HomeScreen(
     }
 
     val accent = LocalAppPalette.current
-    var showPalettePicker by remember { mutableStateOf(false) }
+    var showSettings        by remember { mutableStateOf(false) }
+    var showChangePassword  by remember { mutableStateOf(false) }
 
     Box(modifier = Modifier.fillMaxSize()) {
         // Soft accent bloom top-left for premium depth.
@@ -83,50 +80,55 @@ fun HomeScreen(
                 )
         )
 
-        // Settings (top-right) — premium glass chip switches the colour palette.
-        // statusBarsPadding() drops it clear of the system bar so it never
-        // crowds the battery/clock icons on edge-to-edge devices.
+        // Settings (top-right). statusBarsPadding() drops it clear of the
+        // system bar so it never crowds the battery/clock icons.
         GlassIconChip(
             icon               = Icons.Filled.Settings,
-            contentDescription = "Theme colour settings",
-            onClick            = { showPalettePicker = true },
+            contentDescription = "Settings",
+            onClick            = { showSettings = true },
             modifier           = Modifier
                 .align(Alignment.TopEnd)
                 .statusBarsPadding()
                 .padding(top = 12.dp, end = 16.dp),
         )
 
-        // Greeting + stats + CTA, vertically centered.
+        // Greeting at upper-mid, then stats and CTA in the lower half.
+        // Weighted spacers keep the title floating in the top third regardless
+        // of screen height; the cards below stay anchored as a unit.
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .statusBarsPadding()
                 .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
         ) {
+            Spacer(Modifier.weight(0.9f))
+
+            // "Hare Krishna" hero — display-sized Serif painted with the live
+            // accent gradient, so switching palettes recolours it instantly.
             Text(
                 "Hare Krishna",
-                style     = MaterialTheme.typography.headlineMedium,
-                color     = MaterialTheme.colorScheme.onBackground,
+                style = MaterialTheme.typography.displayMedium.copy(
+                    brush = Brush.horizontalGradient(accent.primary.stops),
+                ),
                 textAlign = TextAlign.Center,
             )
+            Spacer(Modifier.height(8.dp))
             Text(
                 state.bhaktName.ifBlank { " " },
-                style     = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.titleMedium.copy(letterSpacing = 1.2.sp),
                 color     = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
             )
 
-            Spacer(Modifier.height(28.dp))
+            Spacer(Modifier.weight(1.4f))
 
-            Row(
-                modifier              = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
-                StatTile("Today",    state.todayCount,    Modifier.weight(1f))
-                StatTile("Week",     state.weekTotal,     Modifier.weight(1f))
-                StatTile("Lifetime", state.lifetimeTotal, Modifier.weight(1f))
-            }
+            ServerStatsCard(
+                todayValue    = state.todayCount,
+                weekValue     = state.weekTotal,
+                lifetimeValue = state.lifetimeTotal,
+                leading       = { StatusDot() },
+            )
 
             Spacer(Modifier.height(28.dp))
 
@@ -164,77 +166,32 @@ fun HomeScreen(
                     }
                 }
             }
+
+            Spacer(Modifier.weight(0.9f))
         }
     }
 
-    if (showPalettePicker) {
-        PalettePickerSheet(
-            current   = accent.id,
-            onSelect  = {
-                viewModel.selectPalette(it)
-                showPalettePicker = false
+    if (showSettings) {
+        HomeSettingsSheet(
+            currentPalette   = accent.id,
+            onSelectPalette  = { viewModel.selectPalette(it) },
+            onChangePassword = {
+                showSettings       = false
+                showChangePassword = true
             },
-            onDismiss = { showPalettePicker = false },
+            onSignOut        = {
+                showSettings = false
+                viewModel.signOut()
+            },
+            onDismiss        = { showSettings = false },
         )
     }
-}
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun PalettePickerSheet(
-    current:   PaletteId,
-    onSelect:  (PaletteId) -> Unit,
-    onDismiss: () -> Unit,
-) {
-    val sheetState = rememberModalBottomSheetState()
-    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
-        Column(
-            modifier            = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
-        ) {
-            Text(
-                "Theme colour",
-                style    = MaterialTheme.typography.titleMedium,
-                color    = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.padding(bottom = 8.dp),
-            )
-
-            Palettes.all.forEach { p ->
-                val selected = p.id == current
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(16.dp))
-                        .clickable { onSelect(p.id) }
-                        .padding(vertical = 10.dp),
-                    verticalAlignment     = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(14.dp),
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(40.dp)
-                            .clip(CircleShape)
-                            .background(p.primary.linear()),
-                    )
-                    Text(
-                        p.displayName,
-                        style    = MaterialTheme.typography.bodyLarge,
-                        color    = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.weight(1f),
-                    )
-                    if (selected) {
-                        Icon(
-                            imageVector        = Icons.Filled.Check,
-                            contentDescription = "Selected",
-                            tint               = MaterialTheme.colorScheme.primary,
-                        )
-                    }
-                }
-            }
-
-            Spacer(Modifier.height(16.dp))
-        }
+    if (showChangePassword) {
+        ChangePasswordDialog(
+            onSubmit  = viewModel::changePassword,
+            onSuccess = { showChangePassword = false },
+            onDismiss = { showChangePassword = false },
+        )
     }
 }

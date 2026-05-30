@@ -5,7 +5,6 @@ import androidx.lifecycle.viewModelScope
 import com.harekrishna.data.local.SessionPrefs
 import com.harekrishna.data.local.UserPrefs
 import com.harekrishna.data.repository.CounterRepository
-import com.harekrishna.domain.auth.AuthRepository
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -22,7 +21,6 @@ private const val SYNC_TAP_THRESHOLD  = 108       // one mala — force a sync i
 
 class CounterViewModel(
     private val counterRepository: CounterRepository,
-    private val authRepository:    AuthRepository,
     private val userPrefs:         UserPrefs,
     sessionPrefs:                  SessionPrefs,
 ) : ViewModel() {
@@ -88,10 +86,5 @@ class CounterViewModel(
 
     fun refresh() = viewModelScope.launch {
         counterRepository.loadInitial()
-    }
-
-    fun signOut() = viewModelScope.launch {
-        counterRepository.sync()          // flush pending taps before letting go
-        authRepository.signOut()
     }
 }

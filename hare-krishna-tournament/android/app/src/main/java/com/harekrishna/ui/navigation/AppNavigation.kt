@@ -45,7 +45,14 @@ fun AppNavigation(services: ServiceLocator) {
     val homeVm: HomeViewModel = viewModel(
         key = "home-${current.bhaktName}",
         factory = viewModelFactory {
-            initializer { HomeViewModel(services.counterRepository, services.userPrefs, services.sessionPrefs) }
+            initializer {
+                HomeViewModel(
+                    counterRepository = services.counterRepository,
+                    authRepository    = services.authRepository,
+                    userPrefs         = services.userPrefs,
+                    sessionPrefs      = services.sessionPrefs,
+                )
+            }
         },
     )
     val counterVm: CounterViewModel = viewModel(
@@ -54,7 +61,6 @@ fun AppNavigation(services: ServiceLocator) {
             initializer {
                 CounterViewModel(
                     counterRepository = services.counterRepository,
-                    authRepository    = services.authRepository,
                     userPrefs         = services.userPrefs,
                     sessionPrefs      = services.sessionPrefs,
                 )

@@ -5,7 +5,7 @@ import * as Switch                           from '@radix-ui/react-switch'
 import * as AlertDialog                      from '@radix-ui/react-alert-dialog'
 import * as Tooltip                          from '@radix-ui/react-tooltip'
 import * as Popover                          from '@radix-ui/react-popover'
-import { Pencil, Trash2, Check, X, LogOut } from 'lucide-react'
+import { Pencil, Trash2, Check, X, LogOut, KeyRound } from 'lucide-react'
 import { getScores, updateScores }           from '../api/sadhanaApi'
 import { getKrishnaDasList, createKrishnaDas,
          updateKrishnaDas, deleteKrishnaDas } from '../api/krishnaDasApi'
@@ -27,6 +27,89 @@ function PlaygroundSwitch({ checked, onCheckedChange, disabled }) {
     >
       <Switch.Thumb className="switch-thumb" />
     </Switch.Root>
+  )
+}
+
+// ── Radix AlertDialog — set / reset password ──────
+// One-shot password updater per row. Discoverable (its own key icon) so admins
+// don't have to enter full edit mode just to hand someone a new password.
+function SetPasswordDialog({ bhaktName, hasPassword, onSave }) {
+  const [open,   setOpen]   = useState(false)
+  const [pwd,    setPwd]    = useState('')
+  const [saving, setSaving] = useState(false)
+
+  const tooLong = pwd.length > 0 && pwd.length < 6
+  const canSave = pwd.length >= 6 && !saving
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    if (!canSave) return
+    setSaving(true)
+    try {
+      await onSave(pwd)
+      setPwd('')
+      setOpen(false)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <AlertDialog.Root open={open} onOpenChange={(o) => { setOpen(o); if (!o) setPwd('') }}>
+      <Tooltip.Root>
+        <AlertDialog.Trigger asChild>
+          <Tooltip.Trigger asChild>
+            <button className="kl-btn kl-btn--edit" type="button"><KeyRound size={15} /></button>
+          </Tooltip.Trigger>
+        </AlertDialog.Trigger>
+        <Tooltip.Content className="tooltip-content" sideOffset={5}>
+          {hasPassword ? 'Reset password' : 'Set password'}
+        </Tooltip.Content>
+      </Tooltip.Root>
+
+      <AlertDialog.Portal>
+        <AlertDialog.Overlay className="alert-overlay" />
+        <AlertDialog.Content className="alert-content">
+          <AlertDialog.Title className="alert-title">
+            🔐 {hasPassword ? 'Reset password' : 'Set password'} — {bhaktName}
+          </AlertDialog.Title>
+          <AlertDialog.Description className="alert-desc">
+            Minimum 6 characters. Share the new password with the contestant
+            privately — it works on both the mobile app and admin login.
+          </AlertDialog.Description>
+          <form onSubmit={handleSubmit}>
+            <input
+              className="admin-input"
+              type="password"
+              placeholder="New password (min 6 characters)"
+              autoComplete="new-password"
+              value={pwd}
+              onChange={e => setPwd(e.target.value)}
+              style={{ marginTop: '1rem', width: '100%' }}
+              autoFocus
+            />
+            {tooLong && (
+              <div style={{ color: '#f87171', fontSize: '0.8rem', marginTop: '0.5rem' }}>
+                Must be at least 6 characters.
+              </div>
+            )}
+            <div className="alert-actions">
+              <AlertDialog.Cancel asChild>
+                <button className="alert-btn alert-btn--cancel" type="button">Cancel</button>
+              </AlertDialog.Cancel>
+              <button
+                className="alert-btn alert-btn--confirm"
+                type="submit"
+                disabled={!canSave}
+                style={!canSave ? { opacity: 0.5, cursor: 'not-allowed' } : undefined}
+              >
+                {saving ? 'Saving…' : hasPassword ? 'Reset' : 'Set'}
+              </button>
+            </div>
+          </form>
+        </AlertDialog.Content>
+      </AlertDialog.Portal>
+    </AlertDialog.Root>
   )
 }
 
@@ -394,6 +477,19 @@ function KrishnaDasList({ users, onRefresh }) {
     }
   }
 
+  // Dedicated one-shot password updater — same endpoint as the edit-mode auth
+  // row, but discoverable as a per-row action so admins don't have to enter
+  // full edit mode just to hand someone a new password.
+  const handleSetPassword = async (id, password) => {
+    try {
+      await updateKrishnaDas(id, { password })
+      onRefresh()
+      toast.success('Password updated')
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Failed to update password')
+    }
+  }
+
   if (!users.length) return (
     <div className="admin-section">
       <h2 className="admin-section-title">👥 All Krishnadas</h2>
@@ -505,6 +601,12 @@ function KrishnaDasList({ users, onRefresh }) {
                       </Tooltip.Trigger>
                       <Tooltip.Content className="tooltip-content" sideOffset={5}>Edit</Tooltip.Content>
                     </Tooltip.Root>
+
+                    <SetPasswordDialog
+                      bhaktName   = {u.bhaktName}
+                      hasPassword = {!!u.auth?.passwordSetAt}
+                      onSave      = {(pwd) => handleSetPassword(u._id, pwd)}
+                    />
 
                     <DeleteDialog bhaktName={u.bhaktName} onConfirm={() => handleDelete(u._id)} />
                   </div>

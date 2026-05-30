@@ -1,7 +1,5 @@
 package com.harekrishna.ui.counter
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -13,10 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Settings
@@ -30,8 +25,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
@@ -40,11 +33,10 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.harekrishna.ui.common.GlassIconChip
-import com.harekrishna.ui.common.StatTile
+import com.harekrishna.ui.common.ServerStatsCard
+import com.harekrishna.ui.common.StatusDot
 import com.harekrishna.ui.counter.components.CounterButton
 import com.harekrishna.ui.counter.components.SettingsSheet
-import com.harekrishna.ui.counter.components.SyncStatusBar
-import com.harekrishna.ui.theme.LocalAppPalette
 
 @Composable
 fun CounterScreen(
@@ -73,7 +65,6 @@ fun CounterScreen(
     var showSettings by remember { mutableStateOf(false) }
     val haptic = LocalHapticFeedback.current
     val tapAnywhereSource = remember { MutableInteractionSource() }
-    val accent = LocalAppPalette.current
 
     val onCounterTap: () -> Unit = {
         viewModel.onTap()
@@ -112,67 +103,10 @@ fun CounterScreen(
             )
         }
 
-        Spacer(Modifier.height(16.dp))
-
-        // ── Stats card — server-truth tiles inside a labelled glass card ──
-        // "Lalju server" makes it clear these numbers are what the server has,
-        // distinct from the personal display counter on the tap zone below.
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(24.dp))
-                .background(
-                    Brush.linearGradient(
-                        colors = listOf(
-                            accent.primary.solid.copy(alpha = 0.10f),
-                            accent.primary.solid.copy(alpha = 0.03f),
-                        )
-                    )
-                )
-                .border(
-                    width = 1.dp,
-                    color = accent.primary.solid.copy(alpha = 0.18f),
-                    shape = RoundedCornerShape(24.dp),
-                )
-                .padding(14.dp),
-        ) {
-            Row(
-                modifier          = Modifier.padding(start = 4.dp, bottom = 10.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(8.dp)
-                        .clip(CircleShape)
-                        .background(accent.primary.solid),
-                )
-                Spacer(Modifier.size(8.dp))
-                Text(
-                    "Lalju server",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-            Row(
-                modifier              = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
-                StatTile(label = "Today",    value = state.todayServer,   modifier = Modifier.weight(1f))
-                StatTile(label = "Week",     value = state.weekTotal,     modifier = Modifier.weight(1f))
-                StatTile(label = "Lifetime", value = state.lifetimeTotal, modifier = Modifier.weight(1f))
-            }
-        }
-
-        Spacer(Modifier.height(12.dp))
-
-        SyncStatusBar(
-            isSyncing = state.isSyncing,
-            isPending = state.hasPending,
-            syncedAt  = state.syncedAt,
-            error     = state.error,
-        )
-
-        // ── Tap zone (the counter) ──────────────
+        // ── Stats + counter as a vertically-centered group below the header ──
+        // Wrapping in a weighted Box lets the stats float into the available
+        // space rather than hugging the header. tap-anywhere covers this whole
+        // zone so any tap (outside system UI / the back/settings chips) counts.
         Box(
             modifier = Modifier
                 .weight(1f)
@@ -187,14 +121,41 @@ fun CounterScreen(
                 ),
             contentAlignment = Alignment.Center,
         ) {
-            // Always render from local state — the counter works offline; the
-            // server fetch only updates the tiles, it must never gate the count.
-            CounterButton(
-                count         = state.displayCount,
-                bounceEnabled = state.bounceEnabled,
-                clickable     = !state.tapAnywhereEnabled,
-                onTap         = onCounterTap,
-            )
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+                modifier            = Modifier.fillMaxWidth(),
+            ) {
+                // Stats card — server-truth tiles. The leading dot encodes sync
+                // state via color + pulse, so we can drop the separate
+                // "Synced…/Sync pending…" text below.
+                ServerStatsCard(
+                    todayValue    = state.todayServer,
+                    weekValue     = state.weekTotal,
+                    lifetimeValue = state.lifetimeTotal,
+                    leading = {
+                        StatusDot(
+                            animating = state.isSyncing || state.hasPending,
+                            color     = if (state.error != null)
+                                MaterialTheme.colorScheme.error
+                            else
+                                MaterialTheme.colorScheme.primary,
+                        )
+                    },
+                )
+
+                Spacer(Modifier.height(36.dp))
+
+                // Always render from local state — the counter works offline;
+                // the server fetch only updates the tiles, it must never gate
+                // the count.
+                CounterButton(
+                    count         = state.displayCount,
+                    bounceEnabled = state.bounceEnabled,
+                    clickable     = !state.tapAnywhereEnabled,
+                    onTap         = onCounterTap,
+                )
+            }
         }
     }
 
@@ -205,7 +166,6 @@ fun CounterScreen(
             onToggleBounce      = viewModel::onToggleBounce,
             onToggleTapAnywhere = viewModel::onToggleTapAnywhere,
             onResetToday        = viewModel::onResetToday,
-            onSignOut           = viewModel::signOut,
             onDismiss           = { showSettings = false },
         )
     }
