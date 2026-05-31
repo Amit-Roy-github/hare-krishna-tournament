@@ -49,32 +49,16 @@ export async function upsertTodaySadhana(krishnaDasId, fields) {
 // The snapshot is monotonic by design, so out-of-order or retried POSTs can
 // never drag it down and double-credit on the next sync. All of this happens
 // in one atomic single-document update.
-const SUSPICIOUS_DIFF = 5000;
 export async function applyDeviceCount(krishnaDasId, deviceId, date, total) {
   const day       = parseDayStart(date);
   const safeTotal = Math.max(0, Math.floor(Number(total) || 0));
   const snapPath  = `deviceSnapshots.${deviceId}.naamJaapCount`;
 
-  // Inspect the snapshot BEFORE the update so we can log a warning if this
-  // single call would credit an implausible diff (defense in depth — the
-  // update math itself stays unchanged and still applies the full diff).
-  const before = await Sadhana.findOne(
-    { krishnadasId: krishnaDasId, date: day },
-    { [snapPath]: 1 },
-  ).lean();
-  const beforeSnap = before
-    ? (before.deviceSnapshots?.[deviceId]?.naamJaapCount ?? 0)
-    : 0;
-  const diff = Math.max(0, safeTotal - beforeSnap);
-  console.log(`[applyDeviceCount] diff=${diff} (krishnaDasId=${krishnaDasId} device=${deviceId} date=${day.toISOString().slice(0,10)} total=${safeTotal} snap=${beforeSnap})`)
-  if (diff > SUSPICIOUS_DIFF) {
-    console.warn(
-      `[applyDeviceCount] suspicious diff=${diff} ` +
-      `(krishnaDasId=${krishnaDasId} device=${deviceId} ` +
-      `date=${day.toISOString().slice(0,10)} total=${safeTotal} snap=${beforeSnap})`
-    );
-  }
-
+  // Single round-trip: atomic pipeline read+write. We used to do a separate
+  // findOne first to log diffs, but each Atlas round-trip is ~200–500ms from
+  // Vercel and the extra hop doubled the time per item — which, multiplied
+  // by a Promise.all over the client's day backlog, was blowing past the
+  // 300s function ceiling.
   const updated = await Sadhana.findOneAndUpdate(
     { krishnadasId: krishnaDasId, date: day },
     [

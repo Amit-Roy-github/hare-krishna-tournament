@@ -17,6 +17,13 @@ async function connectDB() {
     cached.promise = mongoose.connect(MONGODB_URI, {
       dbName:               DB_NAME,
       bufferCommands:       false,
+      // Each Vercel function instance keeps its own pool. The default
+      // (Mongoose 9 = 100) is fine; explicit here so it's visible.
+      maxPoolSize:          50,
+      // If the cluster doesn't answer in 5s, fail fast — better to return
+      // a quick 503 than to hold the request for 300s.
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS:          15000,
     });
   }
 
