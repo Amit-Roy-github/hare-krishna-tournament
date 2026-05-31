@@ -21,9 +21,18 @@ const sync = requireAuth(async (req, res) => {
   const items = Array.isArray(req.body) ? req.body : [req.body];
   const valid = items.filter(it => it && it.deviceId);
 
+  // Per-request tag so multiple log lines from the SAME POST share an ID.
+  // Lets us tell at a glance: one req= with 3 entries for the same date →
+  // duplicates in client days[]; many different req= → just retry loop.
+  const reqId = req.headers['x-vercel-id']
+    || req.headers['x-request-id']
+    || Math.random().toString(36).slice(2, 8);
+
+  console.log(`[req=${reqId}] [naam.POST] bhaktName=${req.auth.sub} items=${valid.length} body=${JSON.stringify(valid)}`);
+
   const results = await Promise.all(
     valid.map(it =>
-      applyDeviceCount(krishnaDas._id, it.deviceId, it.date, it.total)
+      applyDeviceCount(krishnaDas._id, it.deviceId, it.date, it.total, reqId)
         .then(naamJaapCount => ({ date: it.date, naamJaapCount }))
     )
   );

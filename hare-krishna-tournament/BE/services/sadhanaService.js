@@ -49,7 +49,7 @@ export async function upsertTodaySadhana(krishnaDasId, fields) {
 // The snapshot is monotonic by design, so out-of-order or retried POSTs can
 // never drag it down and double-credit on the next sync. All of this happens
 // in one atomic single-document update.
-export async function applyDeviceCount(krishnaDasId, deviceId, date, total) {
+export async function applyDeviceCount(krishnaDasId, deviceId, date, total, reqId = '?') {
   const day       = parseDayStart(date);
   const safeTotal = Math.max(0, Math.floor(Number(total) || 0));
   const snapPath  = `deviceSnapshots.${deviceId}.naamJaapCount`;
@@ -79,6 +79,17 @@ export async function applyDeviceCount(krishnaDasId, deviceId, date, total) {
     ],
     // Mongoose 9 requires explicit opt-in to treat the array as a pipeline.
     { upsert: true, returnDocument: 'after', updatePipeline: true }
+  );
+
+  // Log with the request ID so we can group multiple log lines back to a
+  // single POST. If a single req= shows multiple entries for the same date,
+  // the client's days[] has duplicates (bug). If many lines share a date
+  // across DIFFERENT req=, that's just the retry loop.
+  const newSnap = updated.deviceSnapshots?.[deviceId]?.naamJaapCount ?? safeTotal;
+  console.log(
+    `[req=${reqId}] [applyDeviceCount] device=${deviceId} ` +
+    `date=${day.toISOString().slice(0,10)} sent=${safeTotal} ` +
+    `→ count=${updated.naamJaapCount} snap=${newSnap}`
   );
 
   return updated.naamJaapCount;
